@@ -59,3 +59,7 @@ If recovery reports a conflicting manual summary or incomplete cleanup, preserve
 Synthetic endpoint and fault tests exercise named process interruption/restart boundaries. They do not prove physical power-loss atomicity or every possible failure. An unacknowledged summary-only edit may recover old or new text, and an interrupted operation may retain an additional exact summary revision.
 
 Runtime tests and signed builds have run on macOS arm64. Intel macOS has compile-only validation. Signing verification does not establish Documents-consent persistence or replace Developer ID/notarization for distribution. Candidate checks do not replace deployment-time backup, state comparison or native consent verification.
+
+## Owned storage upgrades
+
+Before installing a build with a storage upgrade, pause automated writers and create an API backup of database and files together. Validate a candidate against a restored copy first. Startup migrates entity descriptions/history into SQLite and shared source references into item-owned storage before readiness. Repeated startup must preserve contents and identities. Do not roll back only the executable after a schema/storage upgrade: restore the matching complete backup with the service stopped if rollback is required. Retain the pre-upgrade backup until the running installation has been verified.

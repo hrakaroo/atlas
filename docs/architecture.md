@@ -64,7 +64,11 @@ The hourly workflow asks Library for at most three due owner repairs. Persistent
 
 ## Data model and reader
 
-SQLite holds identities, search, revisions, source metadata, relationships, pending intake, ownership retry state, tombstones and Activity. Saved item directories hold current summary Markdown, preserved originals and histories. Back up the database and content together.
+SQLite holds identities, search, revisions, source metadata, relationships, pending intake, ownership retry state, tombstones and Activity. People, Teams and Projects use `items.summary` as their authoritative database description. `entity_snapshots` preserves description revisions and historical originals; `entity_assets` preserves historical attachments. These entities need no item directories.
+
+Documents and meetings retain per-item summary Markdown and full source snapshots. External Google Docs and Confluence pages keep their stable source keys and URLs; local snapshots support search and history without replacing the external originals. Zoom intake copies the complete queued transcript into Atlas before reporting success, so recording-folder files are independent.
+
+At startup, after interrupted-write recovery and before readiness, Library migrates older entity files into SQLite and older shared source paths into per-item originals/attachments. Every copy is read back before references change or redundant entity files are removed. Existing item IDs, source hashes, links, organization and opaque history IDs remain valid. A conflict or missing source fails startup rather than discarding content. Remaining shared archives are safety copies, not active dependencies. Back up the database and content together.
 
 People, Teams and Projects are entities with typed relationships. Topic/type tags remain separate; legacy typed tags are compatibility adapters. Confirmed authorship, attendance and document ownership retain their own records.
 

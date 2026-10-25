@@ -196,6 +196,9 @@ func run() error {
 	if err := domain.RecoverPendingTrash(); err != nil {
 		return err
 	}
+	if err := domain.MigrateOwnedStorage(); err != nil {
+		return err
+	}
 	if err := saveConnection(runtime, settings); err != nil {
 		return err
 	}

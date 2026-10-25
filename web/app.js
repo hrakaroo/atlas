@@ -220,8 +220,8 @@ function reconcileRailChildren(parent,incoming){
     for(const node of previous)if(!used.has(node))node.remove();
 }
 function documentSourceAction(item){
-    const source=(item.source_links||[]).find(link=>link.kind==='document'&&link.primary&&/^https:\/\/docs\.google\.com\/document\//.test(link.url||''));
-    return source?`<a class="rail-document-source" href="${esc(source.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(item.title)} in Google Docs" title="Open in Google Docs">↗</a>`:'';
+    const source=(item.source_links||[]).find(link=>link.kind==='document'&&link.primary&&/^https:\/\//.test(link.url||''));
+    return source?`<a class="rail-document-source" href="${esc(source.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(item.title)} in ${source.url.startsWith('https://docs.google.com/')?'Google Docs':'Confluence'}" title="Open in ${source.url.startsWith('https://docs.google.com/')?'Google Docs':'Confluence'}">↗</a>`:'';
 }
 function documentPeopleRoles(item){
     const labels={owner:'Owner',creator:'Created by',mentioned:'Mentioned'};
@@ -352,14 +352,14 @@ function readerMoreMenu(item){
 }
 function sourceButtons(i){
     return (i.source_links||[]).filter(link=>link.primary).map(link=>
-        `<a class="source-button" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${link.kind==='document'?'Open original Google Doc':esc(link.label||'Open Calendar event')} ↗</a>`
+        `<a class="source-button" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${link.kind==='document'?(link.url.startsWith('https://docs.google.com/')?'Open original Google Doc':'Open original Confluence page'):esc(link.label||'Open Calendar event')} ↗</a>`
     ).join('');
 }
 function additionalDocuments(i){
     const links=(i.source_links||[]).filter(link=>!link.primary);
     const documents=links.filter(link=>link.kind==='document');
     const meetings=links.filter(link=>link.kind==='calendar');
-    const documentRows=documents.map(link=>`<div class="reference-row">${link.atlas_id?`<button class="reference-title" data-item="${esc(link.atlas_id)}" data-document-view="true">${esc(link.label)}</button><a class="reference-external" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(link.label)} in Google Docs" title="Open in Google Docs">↗</a>`:`<a class="reference-title" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.label)} ↗</a>`}</div>`).join('');
+    const documentRows=documents.map(link=>`<div class="reference-row">${link.atlas_id?`<button class="reference-title" data-item="${esc(link.atlas_id)}" data-document-view="true">${esc(link.label)}</button><a class="reference-external" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(link.label)} in ${link.url.startsWith('https://docs.google.com/')?'Google Docs':'Confluence'}" title="Open in ${link.url.startsWith('https://docs.google.com/')?'Google Docs':'Confluence'}">↗</a>`:`<a class="reference-title" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${esc(link.label)} ↗</a>`}</div>`).join('');
     const meetingRows=meetings.map(link=>`<div class="reference-row"><a class="reference-title" href="${esc(link.url)}" target="_blank" rel="noopener noreferrer">${link.date?`<span class="reference-date">${esc(new Date(link.date+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))}</span>`:''}${esc(link.label||'Calendar event')} ↗</a></div>`).join('');
     return (documents.length?`<details class="reference-section"><summary>Referenced documents <span>(${documents.length})</span></summary><div class="reference-list">${documentRows}</div></details>`:'')+
         (meetings.length?`<details class="reference-section"><summary>Referenced meetings <span>(${meetings.length})</span></summary><div class="reference-list">${meetingRows}</div></details>`:'');

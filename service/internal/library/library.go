@@ -317,6 +317,9 @@ func (l *Library) atomic(path, text string) (err error) {
 	if !utf8.ValidString(text) {
 		return errors.New("Text must be valid UTF-8.")
 	}
+	return l.atomicBytes(path, []byte(text))
+}
+func (l *Library) atomicBytes(path string, content []byte) (err error) {
 	if err = l.safePath(path, true); err != nil {
 		return err
 	}
@@ -332,7 +335,7 @@ func (l *Library) atomic(path, text string) (err error) {
 	}
 	defer os.Remove(f.Name())
 	defer f.Close()
-	if _, err = f.WriteString(text); err != nil {
+	if _, err = f.Write(content); err != nil {
 		return err
 	}
 	if err = f.Sync(); err != nil {

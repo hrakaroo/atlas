@@ -79,12 +79,11 @@ The native window selects its library from `--library /absolute/path`, then `ATL
 | `scripts/chrome_documents.py` | Reader for Chrome’s saved session snapshot |
 | `scripts/atlas_tool.py` | Shared-service tool client for scheduled work |
 | `schedules/` | Registered-task snapshot, full prompts and setup and operating guide |
-| `library/library.sqlite` | Private metadata, search, relationships, queues, tombstones and activity |
-| `library/items/<id>/` | Current Markdown summary, preserved originals and source history |
-| `library/imports/` | Preserved initial Obsidian imports |
+| `library/library.sqlite` | People, Teams and Projects with descriptions and history; item identities, search, relationships, queues, tombstones and activity |
+| `library/items/<id>/` | Document and meeting summaries, cached originals, transcripts, attachments and source history |
 | `library/backups/` | Consistent database and content backups |
 
-All library mutations must enter through Library. Do not edit SQLite or library files from automation scripts. Summary edits preserve original sources and manual organization. External summary Markdown changes are reconciled during background checks; avoid racing application writes.
+All library mutations must enter through Library. Do not edit SQLite or library files from automation scripts. Summary edits preserve original sources and manual organization. People, Teams and Projects are database-backed and need no item folders. External document/meeting summary Markdown changes are reconciled during background checks; avoid racing application writes.
 
 Back up database and content together using Atlas’s backup action. Do not synchronize an open SQLite database through a file-sync service. Library data, backups, OAuth tokens, local session files and credentials are private material and should not be included in a source-code repository. Schedule exports also contain internal workflow details; keep the repository private.
 
@@ -184,9 +183,13 @@ The current complete tool catalog is `service/internal/transport/catalog.json`, 
 
 For scripted tool calls or to avoid a stale client tool catalog, invoke `/usr/bin/python3 scripts/atlas_tool.py <tool-name>` with a JSON object on stdin. After activation it calls the shared service over authenticated HTTP and never opens the database. The service client requires a configured shared service and fails closed if it is unavailable. Restart the service after backend updates; the helper does not reload backend code. Scheduled code must use subprocess argument arrays and must not interpolate document text into shell commands. Use current revisions for guarded writes.
 
-## Legacy imports and status records
+## Source ownership and status records
 
-Historical imports preserve source copies and aliases. There is no ongoing scheduled Obsidian import. Legacy person/team/project tags are compatibility inputs for the current relationship model.
+Google Docs and Confluence pages retain their external identity and link, plus a complete local source snapshot for search, history and offline reading. Confluence page-ID URLs can be supplied through `import_item(doc_urls=[...], original_text=...)`; collecting their content remains an explicit connector step, not a new scheduled crawler. Chrome collection continues to select Google Docs only.
+
+Zoom transcripts are copied into Atlas before intake succeeds. Once the saved original has been verified in Atlas, the recording-folder transcript can be deleted without affecting the library. People, Teams and Projects store descriptions in SQLite; any historical source bytes and attachments remain preserved there. Startup migrates older shared source references into database storage or the corresponding item’s own folder, keeping identities and history links intact. Redundant shared source archives are retained as a safety copy; active records no longer depend on them.
+
+Compatibility identity aliases remain internal to prevent duplicate records and preserve existing links.
 
 Dated status records retain start, exclusive end and source-channel identity. There is no separate scheduled weekly-status collection. The daily AI briefing does read its two explicitly configured Slack channels and saves an edition under Feeds → AI; see its exported prompt.
 

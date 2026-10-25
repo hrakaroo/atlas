@@ -24,6 +24,9 @@ import (
 //go:embed schema.sql
 var schemaSQL string
 
+//go:embed content.sql
+var contentSQL string
+
 //go:embed relationships.sql
 var relationshipsSQL string
 
@@ -154,6 +157,9 @@ func (s *Store) initialize() error {
 	if _, err := s.DB.Exec(schemaSQL); err != nil {
 		return err
 	}
+	if _, err := s.DB.Exec(contentSQL); err != nil {
+		return err
+	}
 	rows, err := s.DB.Query("PRAGMA table_info(items)")
 	if err != nil {
 		return err
@@ -259,15 +265,15 @@ func (s *Store) initialize() error {
 	if _, err = s.DB.Exec("INSERT OR IGNORE INTO blog_feeds(id,name,normalized_name) VALUES(?,?,?)", id, "AI", "ai"); err != nil {
 		return err
 	}
-	type summary struct{ id, text string }
+	type summary struct{ id, text, kind string }
 	var summaries []summary
-	rows, err = s.DB.Query("SELECT id,summary FROM items")
+	rows, err = s.DB.Query("SELECT id,summary,kind FROM items")
 	if err != nil {
 		return err
 	}
 	for rows.Next() {
 		var row summary
-		if err = rows.Scan(&row.id, &row.text); err != nil {
+		if err = rows.Scan(&row.id, &row.text, &row.kind); err != nil {
 			rows.Close()
 			return err
 		}
@@ -279,6 +285,9 @@ func (s *Store) initialize() error {
 		return err
 	}
 	for _, row := range summaries {
+		if row.kind == "person" || row.kind == "team" || row.kind == "project" {
+			continue
+		}
 		if row.id == "" || row.id == "." || row.id == ".." || strings.ContainsAny(row.id, "/\\") {
 			return errors.New("Invalid item identity path.")
 		}

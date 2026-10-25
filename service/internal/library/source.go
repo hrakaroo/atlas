@@ -25,6 +25,38 @@ func googleDocID(raw string) string {
 	}
 	return match[1]
 }
+
+// confluenceIdentity accepts page-ID links; display-name URLs remain ordinary links.
+func confluenceIdentity(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" || u.Hostname() == "" || u.User != nil {
+		return ""
+	}
+	if !strings.HasSuffix(strings.ToLower(u.Hostname()), ".atlassian.net") && !strings.HasPrefix(u.Path, "/wiki/") {
+		return ""
+	}
+	id := ""
+	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+	for i, part := range parts {
+		if part == "pages" && i+1 < len(parts) && digitsPattern.MatchString(parts[i+1]) {
+			id = parts[i+1]
+			break
+		}
+	}
+	if strings.HasSuffix(u.Path, "/pages/viewpage.action") {
+		id = u.Query().Get("pageId")
+	}
+	if !digitsPattern.MatchString(id) {
+		return ""
+	}
+	return "confluence:" + strings.ToLower(u.Host) + ":" + id
+}
+func documentLinkIdentity(raw string) string {
+	if id := googleDocID(raw); id != "" {
+		return id
+	}
+	return confluenceIdentity(raw)
+}
 func normalizeGoogleURL(raw string) string {
 	id := googleDocID(raw)
 	if id == "" {
@@ -88,11 +120,14 @@ func sourceKind(raw string) string {
 	if host == "docs.google.com" && strings.HasPrefix(parsed.EscapedPath(), "/document/") {
 		return "document"
 	}
+	if confluenceIdentity(raw) != "" {
+		return "document"
+	}
 	return ""
 }
 func linkIdentity(raw, kind string) string {
 	if kind == "document" {
-		if id := googleDocID(raw); id != "" {
+		if id := documentLinkIdentity(raw); id != "" {
 			return "document\x00" + id
 		}
 	}
@@ -190,6 +225,9 @@ func referenceLabels(text string) map[string]Record {
 }
 func docIdentity(row Record, meta Record) string {
 	key := str(row, "source_key")
+	if strings.HasPrefix(key, "confluence:") {
+		return key
+	}
 	if strings.HasPrefix(key, "google-doc:") {
 		return strings.TrimPrefix(key, "google-doc:")
 	}
@@ -200,7 +238,7 @@ func docIdentity(row Record, meta Record) string {
 	}
 	urls, _ := stringsArg(meta["doc_urls"])
 	if len(urls) == 1 {
-		return googleDocID(urls[0])
+		return documentLinkIdentity(urls[0])
 	}
 	return ""
 }
@@ -227,7 +265,7 @@ func (l *Library) sourceLinks(item Record, text string) ([]Record, error) {
 		raw, kind := str(link, "url"), str(link, "kind")
 		id := ""
 		if kind == "document" {
-			id = googleDocID(raw)
+			id = documentLinkIdentity(raw)
 		}
 		context := labels[linkIdentity(raw, kind)]
 		label := str(context, "label")
@@ -242,6 +280,9 @@ func (l *Library) sourceLinks(item Record, text string) ([]Record, error) {
 					short = "docs.google.com"
 				}
 				label = "Google Doc · " + short
+				if confluenceIdentity(raw) != "" {
+					label = "Confluence page"
+				}
 			} else {
 				label = "Calendar event"
 			}
@@ -315,6 +356,13 @@ func (l *Library) resolveTarget(target string, includeDeleted bool) (any, error)
 		}
 		relative := str(meta, "obsidian_relative_path")
 		names := []string{str(row, "id"), str(row, "title"), str(meta, "obsidian_stem"), relative, strings.TrimSuffix(relative, ".md"), str(row, "source_path"), filepath.Join(l.Store.Root, "items", str(row, "id"), "summary.md")}
+		aliases, e := l.rows("SELECT path FROM source_path_aliases WHERE item_id=?", row["id"])
+		if e != nil {
+			return nil, e
+		}
+		for _, alias := range aliases {
+			names = append(names, str(alias, "path"))
+		}
 		if key := str(row, "source_key"); strings.HasPrefix(key, "obsidian:") {
 			names = append(names, strings.TrimPrefix(key, "obsidian:"))
 		}
@@ -342,6 +390,9 @@ func (l *Library) Source(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if entityKind(str(item, "kind")) {
+		return l.entityOriginal(id)
+	}
 	path := str(item, "source_path")
 	if path == "" {
 		return nil, errors.New("No preserved source available.")
@@ -357,6 +408,24 @@ func (l *Library) Attachment(id, target string) ([]byte, error) {
 		return nil, err
 	}
 	target = strings.SplitN(target, "#", 2)[0]
+	if entityKind(str(item, "kind")) {
+		rows, e := l.rows("SELECT path,content FROM entity_assets WHERE item_id=? ORDER BY path", id)
+		if e != nil {
+			return nil, e
+		}
+		for _, row := range rows {
+			path := strings.TrimPrefix(strings.TrimPrefix(str(row, "path"), "snapshot/"), "item/")
+			ext := strings.ToLower(filepath.Ext(path))
+			if ext != ".txt" && ext != ".vtt" {
+				continue
+			}
+			if path == target || filepath.Base(path) == target || strings.TrimSuffix(filepath.Base(path), ext) == target {
+				return []byte(str(row, "content")), nil
+			}
+		}
+		return nil, errors.New("Attachment not found.")
+	}
+
 	root := str(item["metadata"].(Record), "snapshot_root")
 	if root == "" {
 		root = filepath.Join(l.Store.Root, "items", id)

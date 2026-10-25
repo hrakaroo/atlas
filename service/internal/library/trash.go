@@ -224,12 +224,21 @@ func (l *Library) DeletionPreview(id string) (Record, error) {
 	return Record{"id": id, "title": item["title"], "revision": item["revision"], "affected_notes": affected}, nil
 }
 func (l *Library) writeReplacement(item Record, summary string) error {
-	folder := filepath.Join(l.Store.Root, "items", str(item, "id"))
-	if err := l.atomic(filepath.Join(folder, "revisions", s(item["revision"])+".md"), str(item, "summary")); err != nil {
-		return err
-	}
-	if err := l.atomic(filepath.Join(folder, "summary.md"), summary); err != nil {
-		return err
+	if entityKind(str(item, "kind")) {
+		if err := l.entityRevision(item); err != nil {
+			return err
+		}
+		if err := l.rememberEntityDescription(str(item, "id"), summary, []byte(summary)); err != nil {
+			return err
+		}
+	} else {
+		folder := filepath.Join(l.Store.Root, "items", str(item, "id"))
+		if err := l.atomic(filepath.Join(folder, "revisions", s(item["revision"])+".md"), str(item, "summary")); err != nil {
+			return err
+		}
+		if err := l.atomic(filepath.Join(folder, "summary.md"), summary); err != nil {
+			return err
+		}
 	}
 	if err := l.exec("UPDATE items SET summary=?,revision=revision+1,updated=? WHERE id=?", summary, l.now(), item["id"]); err != nil {
 		return err

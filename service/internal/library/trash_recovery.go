@@ -37,6 +37,13 @@ func (l *Library) trashIntentPath(id string) (string, error) {
 	return path, nil
 }
 func (l *Library) beginTrashIntent(id, operation string, changes []Record) error {
+	entity, err := l.databaseEntity(id)
+	if err != nil {
+		return err
+	}
+	if entity {
+		return l.exec("INSERT INTO entity_trash_journals VALUES(?,?)", id, jsonText(Record{"version": 1, "operation": operation, "changes": changes}))
+	}
 	path, err := l.trashIntentPath(id)
 	if err != nil {
 		return err
@@ -58,14 +65,23 @@ func (l *Library) recoverTrashIntent(id string) (err error) {
 	if err != nil {
 		return err
 	}
-	if _, err = os.Lstat(path); errors.Is(err, os.ErrNotExist) {
-		return nil
-	} else if err != nil {
-		return err
-	}
-	raw, err := l.readText(path)
+	journal, err := l.row("SELECT intent FROM entity_trash_journals WHERE item_id=?", id)
 	if err != nil {
 		return err
+	}
+	raw := ""
+	if journal != nil {
+		raw = str(journal, "intent")
+	} else {
+		if _, err = os.Lstat(path); errors.Is(err, os.ErrNotExist) {
+			return nil
+		} else if err != nil {
+			return err
+		}
+		raw, err = l.readText(path)
+		if err != nil {
+			return err
+		}
 	}
 	var intent Record
 	if err = json.Unmarshal([]byte(raw), &intent); err != nil {
@@ -100,6 +116,13 @@ func (l *Library) recoverTrashIntent(id string) (err error) {
 			return errors.New("Invalid pending trash replacement")
 		}
 		seen[other] = true
+		database, e := l.databaseEntity(other)
+		if e != nil {
+			return e
+		}
+		if database {
+			continue
+		}
 		otherIntent, err := l.trashIntentPath(other)
 		if err != nil {
 			return err
@@ -138,6 +161,9 @@ func (l *Library) recoverTrashIntent(id string) (err error) {
 		if err = l.atomic(change.path, change.text); err != nil {
 			return err
 		}
+	}
+	if journal != nil {
+		return l.exec("DELETE FROM entity_trash_journals WHERE item_id=?", id)
 	}
 	return os.Remove(path)
 }

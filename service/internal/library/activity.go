@@ -268,7 +268,7 @@ func (l *Library) MarkDocumentChangesSeen(id string, through int64) (Record, err
 	return Record{"item_id": id, "through_id": through}, err
 }
 func (l *Library) reconcileSummaryFiles() error {
-	rows, err := l.rows("SELECT id,summary FROM items WHERE deleted_at IS NULL")
+	rows, err := l.rows("SELECT id,summary FROM items WHERE deleted_at IS NULL AND kind NOT IN ('person','team','project')")
 	if err != nil {
 		return err
 	}

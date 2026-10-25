@@ -394,6 +394,21 @@ func (l *Library) ImportObsidian(vault string) (Record, error) {
 			created++
 		}
 	}
+	// Import runs inside dispatch with its outer lock already held.
+	rows, e := l.rows("SELECT * FROM items")
+	if e != nil {
+		return nil, e
+	}
+	for _, row := range rows {
+		if entityKind(str(row, "kind")) {
+			e = l.migrateEntity(row)
+		} else {
+			e = l.ownImportedSource(row)
+		}
+		if e != nil {
+			return nil, e
+		}
+	}
 	return Record{"created": created, "duplicates": duplicates, "preserved_files": len(paths), "snapshot": snapshot}, nil
 }
 

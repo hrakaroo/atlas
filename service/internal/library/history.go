@@ -17,8 +17,10 @@ import (
 )
 
 type historyEntry struct {
-	entry Record
-	path  string
+	entry    Record
+	path     string
+	data     []byte
+	database bool
 }
 
 func walkFiles(root string) ([]string, error) {
@@ -113,8 +115,8 @@ func (l *Library) readBytes(path string) ([]byte, error) {
 	}
 	return io.ReadAll(file)
 }
-func (l *Library) historyPaths(id string) ([]historyEntry, error) {
-	row, err := l.row("SELECT * FROM items WHERE id=? AND deleted_at IS NULL", id)
+func (l *Library) fileHistoryPaths(id string) ([]historyEntry, error) {
+	row, err := l.row("SELECT * FROM items WHERE id=?", id)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +124,7 @@ func (l *Library) historyPaths(id string) ([]historyEntry, error) {
 		return nil, errors.New("Item not found. It may be in Trash.")
 	}
 	folder := filepath.Join(l.Store.Root, "items", id)
-	candidates := []historyEntry{{Record{"kind": "summary", "revision": row["revision"], "current": true}, filepath.Join(folder, "summary.md")}}
+	candidates := []historyEntry{{entry: Record{"kind": "summary", "revision": row["revision"], "current": true}, path: filepath.Join(folder, "summary.md")}}
 	for _, pair := range [][2]string{{"revisions", "summary"}, {"originals", "original"}} {
 		base := filepath.Join(folder, pair[0])
 		if err = l.historySafePath(base, true); err != nil {
@@ -147,11 +149,11 @@ func (l *Library) historyPaths(id string) ([]historyEntry, error) {
 					}
 				}
 			}
-			candidates = append(candidates, historyEntry{Record{"kind": pair[1], "revision": revision, "current": false}, path})
+			candidates = append(candidates, historyEntry{entry: Record{"kind": pair[1], "revision": revision, "current": false}, path: path})
 		}
 	}
 	if truth(row["source_path"]) {
-		candidates = append(candidates, historyEntry{Record{"kind": "original", "revision": nil, "current": true}, str(row, "source_path")})
+		candidates = append(candidates, historyEntry{entry: Record{"kind": "original", "revision": nil, "current": true}, path: str(row, "source_path")})
 	}
 	result := []historyEntry{}
 	index := map[string]int{}
@@ -162,6 +164,11 @@ func (l *Library) historyPaths(id string) ([]historyEntry, error) {
 		relative, _ := filepath.Rel(l.Store.Root, candidate.path)
 		digest := sha256.Sum256([]byte(str(candidate.entry, "kind") + "\x00" + filepath.ToSlash(relative)))
 		identity := hex.EncodeToString(digest[:])
+		if alias, e := l.row("SELECT entry_id FROM source_history_aliases WHERE item_id=? AND path=?", id, candidate.path); e != nil {
+			return nil, e
+		} else if alias != nil {
+			identity = str(alias, "entry_id")
+		}
 		if i, exists := index[identity]; exists {
 			result[i].entry["current"] = truth(result[i].entry["current"]) || truth(candidate.entry["current"])
 			continue
@@ -172,6 +179,20 @@ func (l *Library) historyPaths(id string) ([]historyEntry, error) {
 		result = append(result, candidate)
 	}
 	return result, nil
+}
+
+func (l *Library) historyPaths(id string) ([]historyEntry, error) {
+	row, err := l.row("SELECT * FROM items WHERE id=? AND deleted_at IS NULL", id)
+	if err != nil {
+		return nil, err
+	}
+	if row == nil {
+		return nil, errors.New("Item not found. It may be in Trash.")
+	}
+	if entityKind(str(row, "kind")) {
+		return l.entityHistory(row)
+	}
+	return l.fileHistoryPaths(id)
 }
 
 var digitsPattern = regexp.MustCompile(`^[0-9]+$`)
@@ -198,6 +219,9 @@ func (l *Library) HistoryContent(id, entryID string) ([]byte, error) {
 	}
 	for _, entry := range entries {
 		if str(entry.entry, "id") == entryID {
+			if entry.database {
+				return entry.data, nil
+			}
 			return l.readBytes(entry.path)
 		}
 	}

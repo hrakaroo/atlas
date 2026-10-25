@@ -29,7 +29,7 @@ func (l *Library) Get(id string, includeDeleted, lightweight bool) (Record, erro
 	if item == nil {
 		return nil, errItemNotFound
 	}
-	if !lightweight {
+	if !lightweight && !entityKind(str(item, "kind")) {
 		path := filepath.Join(l.Store.Root, "items", id, "summary.md")
 		info, e := os.Stat(path)
 		if e != nil {
@@ -225,6 +225,9 @@ func (l *Library) UpdateSummary(id, summary string, revision int64) (Record, err
 	}
 	if number(item["revision"]) != revision {
 		return nil, errors.New("The item changed. Read it again before updating.")
+	}
+	if entityKind(str(item, "kind")) {
+		return l.updateEntitySummary(item, summary)
 	}
 	folder := filepath.Join(l.Store.Root, "items", id)
 	old := str(item, "summary")
@@ -491,6 +494,9 @@ func (l *Library) Ingest(args map[string]any) (result Record, err error) {
 		if id := googleDocID(urls[0]); id != "" {
 			key = "google-doc:" + id
 			sourceKey = key
+		} else if id := confluenceIdentity(urls[0]); id != "" {
+			key = id
+			sourceKey = key
 		}
 	}
 	date := str(args, "date")
@@ -647,8 +653,11 @@ func (l *Library) Ingest(args map[string]any) (result Record, err error) {
 		return nil, err
 	}
 	folder := filepath.Join(l.Store.Root, "items", id)
-	if err = os.Mkdir(folder, 0755); err != nil {
-		return nil, err
+	entity := entityKind(kind)
+	if !entity {
+		if err = os.Mkdir(folder, 0755); err != nil {
+			return nil, err
+		}
 	}
 	staged := true
 	defer func() {
@@ -656,9 +665,14 @@ func (l *Library) Ingest(args map[string]any) (result Record, err error) {
 			_ = os.RemoveAll(folder)
 		}
 	}()
-	if err = l.atomic(filepath.Join(folder, "summary.md"), summary); err != nil {
-		return nil, err
+	if !entity {
+		if err = l.atomic(filepath.Join(folder, "summary.md"), summary); err != nil {
+			return nil, err
+		}
 	}
+	var entityOriginal []byte
+	entityName := "source.txt"
+	entityHasOriginal := false
 	var sourcePath any = args["source_path"]
 	sourceText := str(args, "source_text")
 	if text, exists := args["original_text"]; exists && text != nil {
@@ -671,8 +685,14 @@ func (l *Library) Ingest(args map[string]any) (result Record, err error) {
 			return nil, errors.New("Invalid original filename.")
 		}
 		path := filepath.Join(folder, "originals", name)
-		if err = l.atomic(path, content); err != nil {
-			return nil, err
+		if entity {
+			entityOriginal = []byte(content)
+			entityName = name
+			entityHasOriginal = true
+		} else {
+			if err = l.atomic(path, content); err != nil {
+				return nil, err
+			}
 		}
 		sourcePath = path
 		sourceText = content
@@ -683,16 +703,29 @@ func (l *Library) Ingest(args map[string]any) (result Record, err error) {
 		if e != nil {
 			return nil, e
 		}
-		if e = l.safePath(path, false); e != nil {
-			return nil, errors.New("Source files must be preserved inside the library.")
+		if !entityHasOriginal {
+			if e = l.safePath(path, false); e != nil {
+				return nil, errors.New("Source files must be preserved inside the library.")
+			}
 		}
-		bytes, e := l.readBytes(path)
+		bytes := entityOriginal
+		var readErr error
+		if !entityHasOriginal {
+			bytes, readErr = l.readBytes(path)
+		}
+		e = readErr
 		if e != nil {
 			return nil, e
 		}
 		sum := sha256.Sum256(bytes)
 		sourceHash = hex.EncodeToString(sum[:])
 		sourcePath = path
+		if entity {
+			entityOriginal = bytes
+			entityHasOriginal = true
+			entityName = filepath.Base(path)
+			sourcePath = nil
+		}
 	} else {
 		sourcePath = nil
 	}
@@ -715,6 +748,20 @@ func (l *Library) Ingest(args map[string]any) (result Record, err error) {
 	err = l.transaction(func() error {
 		if e := l.exec("INSERT INTO items(id,title,kind,date,summary,source_key,source_path,source_hash,metadata,created,updated,period_start,period_end,source_channel) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)", id, title, kind, date, summary, sourceKey, sourcePath, sourceHash, jsonText(meta), now, now, args["period_start"], args["period_end"], args["source_channel"]); e != nil {
 			return e
+		}
+		if entity {
+			if entityHasOriginal {
+				relative := filepath.Join("items", id, "originals", entityName)
+				if e := l.saveEntitySnapshot(id, Record{"id": historyID("original", relative), "kind": "original", "name": entityName, "revision": nil, "current": true}, entityOriginal); e != nil {
+					return e
+				}
+			}
+			// Legacy snapshot metadata is migrated by ImportObsidian or startup.
+			if str(meta, "snapshot_root") == "" {
+				if e := l.exec("INSERT INTO entity_storage VALUES(?)", id); e != nil {
+					return e
+				}
+			}
 		}
 		for _, name := range authors {
 			if e := l.exec("INSERT OR IGNORE INTO item_authors VALUES(?,?,?)", id, name, caseFold(name)); e != nil {

@@ -91,3 +91,5 @@ These additional suites use only the Go service and marked synthetic libraries:
 ```
 
 Use an absolute Go executable plus `--contract-mode --owner-name "John Smith" --timezone "America/Los_Angeles"` in each JSON argument array. The configuration checks preserve rich state across Go restarts and test fresh owner/timezone settings. Failure suites exercise interrupted writes, source refresh, deletion/restoration, conflicts and singleton ownership. They do not contact external source accounts or open a live library.
+
+`test_owned_storage.py` verifies database-owned entity descriptions/history and independent saved sources. Historical setup occurs only in marked disposable roots before the service opens them. Source bytes, organization, history, Trash, rollback and restart behavior are asserted through HTTP/MCP. The storage upgrade also preserves legacy path aliases and opaque history IDs.
