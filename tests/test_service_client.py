@@ -9,7 +9,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'app'))
 import service_client
 
 class ClientTests(unittest.TestCase):
-    def test_outage_without_activation_marker_never_imports_python_backend(self):
+    def test_outage_without_activation_marker_never_opens_local_library(self):
         with tempfile.TemporaryDirectory() as folder:
             with patch.object(service_client,'request',side_effect=ValueError('Unavailable')):
                 with patch.dict(sys.modules,{'library':None,'server':None}):

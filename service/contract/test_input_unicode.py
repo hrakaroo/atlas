@@ -9,7 +9,7 @@ class InputUnicodeContracts(EndpointCase):
         return json.dumps(payload,ensure_ascii=True).encode("ascii")
 
     def test_unpaired_surrogates_fail_without_import_and_valid_pairs_remain_exact(self):
-        # Python's reference reports an MCP tool error; Go may reject malformed
+        # A malformed request may fail at the MCP tool or JSON decoding boundary; reject malformed
         # Unicode at HTTP parsing (400). This reviewed deviation prevents lossy
         # replacement decoding. Neither response may claim an import succeeded.
         for index,text in enumerate((chr(0xd800),chr(0xdc00),chr(0xd800)+"A",

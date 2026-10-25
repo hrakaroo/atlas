@@ -1,4 +1,4 @@
-// Atlas Go service. Python remains the default; Go serving requires explicit opt-in.
+// Atlas shared service: library storage, HTTP API and MCP.
 package main
 
 import (
@@ -51,7 +51,7 @@ func run() error {
 	flag.StringVar(&owner, "owner-name", "", "Library owner display name")
 	flag.StringVar(&timezone, "timezone", "America/Los_Angeles", "Library timezone")
 	flag.BoolVar(&contract, "contract-mode", false, "Allow marked disposable test libraries only")
-	flag.BoolVar(&serve, "serve", false, "Opt in to the Go service; Python installation remains unchanged")
+	flag.BoolVar(&serve, "serve", false, "Start the Go service for the configured library")
 	flag.Parse()
 	if flag.NArg() != 0 || library == "" || contract == serve {
 		return errors.New("choose exactly one of --contract-mode or --serve and supply an explicit --library")
@@ -117,11 +117,11 @@ func run() error {
 		relative, err := filepath.Rel(temporaryRoot, filepath.Dir(root))
 		if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) ||
 			!strings.HasPrefix(filepath.Base(filepath.Dir(root)), "atlas-contract-") {
-			return errors.New("foundation library must be inside a contract-owned temporary root")
+			return errors.New("test library must be inside a contract-owned temporary root")
 		}
 		marker, err := os.ReadFile(filepath.Join(filepath.Dir(root), ".atlas-contract-fixture"))
 		if err != nil || string(marker) != "atlas-contract-v1" {
-			return errors.New("foundation build accepts only marked disposable fixtures")
+			return errors.New("contract mode accepts only marked disposable fixtures")
 		}
 	}
 	if value := os.Getenv("ATLAS_CONTRACT_CLOCK"); value != "" {

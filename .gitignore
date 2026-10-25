@@ -72,14 +72,11 @@ config.toml.atlas-tmp
 *.orig
 *.rej
 
-# Go migration generated binaries, disposable libraries and reports
+# Go build output, disposable libraries and reports
 /service/.work/
 /service/bin/
 /service/coverage.out
 /service/*.test
-
-# Retired Python implementation, reference tests and local rollback packaging
-/old/
 
 # Local scheduled-task inventory and machine-specific paths
 /schedules/manifest.json

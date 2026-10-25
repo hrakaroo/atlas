@@ -67,7 +67,7 @@ def configure_mcp(library):
 def launch_spec(library, port, backend='go', app=None, owner_name=None, timezone=None):
     """Pure concrete Go launch specification; never writes or registers anything."""
     if backend != 'go':
-        raise ValueError('The Python backend is archived under old/.')
+        raise ValueError('Atlas supports only the Go backend.')
     if not isinstance(port, int) or not 1 <= port <= 65535:
         raise ValueError('Choose a port between 1 and 65535.')
     if not isinstance(owner_name, str) or not owner_name.strip() or not timezone:

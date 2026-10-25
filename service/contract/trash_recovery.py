@@ -1,4 +1,4 @@
-"""Gate5 deletion/restore interruption contracts over endpoints, synthetic only."""
+"""Go deletion/restore interruption contracts over endpoints, synthetic only."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import datetime as dt
@@ -12,7 +12,6 @@ from runner import EvidenceResult
 import harness
 
 GO = None
-PYTHON = [sys.executable,str(ROOT/"old/contract/python_backend.py")]
 
 class TrashRecoveryContracts(unittest.TestCase):
     def service(self,command):
@@ -48,7 +47,7 @@ class TrashRecoveryContracts(unittest.TestCase):
         after=self.snapshot(s,target,neighbors)
         exact({k:v for k,v in before.items() if k!="history"},
               {k:v for k,v in after.items() if k!="history"})
-        # Revision snapshots precede SQLite commit in both backends. A failed
+        # Revision snapshots precede SQLite commit before commit. A failed
         # operation may retain an additional exact copy of its old summary;
         # existing history must remain unchanged and no attempted text may leak.
         for index,(old,new) in enumerate(zip(before["history"],after["history"])):
@@ -90,9 +89,9 @@ class TrashRecoveryContracts(unittest.TestCase):
             with self.assertRaises(Exception):
                 future.result(timeout=5)
 
-    def test_delete_before_commit_rolls_back_links_and_tombstones_on_either_engine(self):
-        for writer,command in (("python",PYTHON),("go",GO)):
-            for reader,reopen in (("python",PYTHON),("go",GO)):
+    def test_delete_before_commit_rolls_back_links_and_tombstones_after_restart(self):
+        for writer,command in (("go",GO),):
+            for reader,reopen in (("go",GO),):
                 with self.subTest(writer=writer,reader=reader):
                     s=self.service(command);target,neighbors=self.seed(s)
                     before=self.snapshot(s,target,neighbors)
@@ -109,9 +108,9 @@ class TrashRecoveryContracts(unittest.TestCase):
                     s.tool("delete_item",item_id=target,expected_revision=self.item(s,target)["revision"])
                     self.assertEqual([x["id"] for x in s.tool("list_trash")],[target])
 
-    def test_restore_before_commit_keeps_trash_and_cleaned_links_on_either_engine(self):
-        for writer,command in (("python",PYTHON),("go",GO)):
-            for reader,reopen in (("python",PYTHON),("go",GO)):
+    def test_restore_before_commit_keeps_trash_and_cleaned_links_after_restart(self):
+        for writer,command in (("go",GO),):
+            for reader,reopen in (("go",GO),):
                 with self.subTest(writer=writer,reader=reader):
                     s=self.service(command);target,neighbors=self.seed(s)
                     s.tool("delete_item",item_id=target,expected_revision=self.item(s,target)["revision"])
@@ -127,8 +126,8 @@ class TrashRecoveryContracts(unittest.TestCase):
                         self.assertIn("[[Trash recovery target|labeled reference]]",self.item(s,n)["summary"])
                     self.assertEqual(s.tool("list_trash"),[])
 
-    def test_delete_after_commit_preserves_complete_cleanup_on_either_engine(self):
-        for reader,reopen in (("python",PYTHON),("go",GO)):
+    def test_delete_after_commit_preserves_complete_cleanup_after_restart(self):
+        for reader,reopen in (("go",GO),):
             with self.subTest(reader=reader):
                 s=self.service(GO);target,neighbors=self.seed(s)
                 self.interrupt(s,target,"delete","after_commit")
@@ -145,8 +144,8 @@ class TrashRecoveryContracts(unittest.TestCase):
                 for n in neighbors:
                     self.assertIn("[[Trash recovery target|labeled reference]]",self.item(s,n)["summary"])
 
-    def test_restore_after_commit_preserves_links_and_explicit_restore_on_either_engine(self):
-        for reader,reopen in (("python",PYTHON),("go",GO)):
+    def test_restore_after_commit_preserves_links_and_explicit_restore_after_restart(self):
+        for reader,reopen in (("go",GO),):
             with self.subTest(reader=reader):
                 s=self.service(GO);target,neighbors=self.seed(s)
                 s.tool("delete_item",item_id=target,expected_revision=self.item(s,target)["revision"])
@@ -172,7 +171,7 @@ def main():
     passed=(result.testsRun>0 and result.wasSuccessful() and not result.skipped
             and all(r["status"]=="pass" for r in result.outcomes))
     stamp=dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-    path=ROOT/"service/.work/reports"/("gate5-trash-recovery-"+stamp+".json")
+    path=ROOT/"service/.work/reports"/("trash-recovery-"+stamp+".json")
     path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(dict(passed=passed,tests_run=result.testsRun,
         test_outcomes=result.outcomes,observed_requests=harness.OBSERVED,

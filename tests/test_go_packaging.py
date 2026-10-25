@@ -49,10 +49,10 @@ class GoPackagingTests(unittest.TestCase):
                 args.update(changes)
                 with self.assertRaises(ValueError): service.launch_spec(**args)
 
-    def test_retired_python_install_rejects_before_any_writes(self):
+    def test_unsupported_backend_rejects_before_any_writes(self):
         with tempfile.TemporaryDirectory() as folder,patch.object(service,'save_connection') as save,patch.object(service,'launchctl') as launch:
-            with self.assertRaisesRegex(ValueError,'archived'):
-                service.install(Path(folder)/'library',47831,backend='python')
+            with self.assertRaisesRegex(ValueError,'only the Go'):
+                service.install(Path(folder)/'library',47831,backend='unsupported')
             save.assert_not_called();launch.assert_not_called()
 
     def test_invalid_go_install_config_fails_before_any_settings_write(self):

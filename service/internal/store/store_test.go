@@ -178,7 +178,7 @@ with open(sys.argv[1],"a") as f:
 `, lockPath)
 	err = command.Run()
 	if exit, ok := err.(*exec.ExitError); !ok || exit.ExitCode() != 7 {
-		t.Fatalf("Writer lock not shared with Python: %v", err)
+		t.Fatalf("Writer lock not shared with independent process: %v", err)
 	}
 	must(t, s.Unlock())
 	fd, err := syscall.Open(lockPath, syscall.O_RDWR, 0600)
@@ -236,7 +236,7 @@ func TestNewIDAndCopiedSQLSource(t *testing.T) {
 		}
 		seen[id] = true
 	}
-	out, err := os.ReadFile(filepath.Join("testdata", "python-schema-reference.json"))
+	out, err := os.ReadFile(filepath.Join("testdata", "schema-reference.json"))
 	must(t, err)
 	var reference struct {
 		Scripts []string `json:"scripts"`
@@ -244,12 +244,12 @@ func TestNewIDAndCopiedSQLSource(t *testing.T) {
 	must(t, json.Unmarshal(out, &reference))
 	expected := reference.Scripts
 	if len(expected) != 2 {
-		t.Fatal("Expected both frozen Python schema scripts")
+		t.Fatal("Expected both frozen schema scripts")
 	}
 	for i, actual := range []string{schemaSQL, relationshipsSQL} {
 		actual = strings.SplitN(actual, "\n", 2)[1]
 		if strings.TrimSpace(actual) != expected[i] {
-			t.Fatal("Embedded schema differs from Python source; review compatibility explicitly")
+			t.Fatal("Embedded schema differs from frozen reference; review compatibility explicitly")
 		}
 	}
 }

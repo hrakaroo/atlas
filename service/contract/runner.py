@@ -48,7 +48,7 @@ class EvidenceResult(unittest.TextTestResult):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--backend", choices=("go", "python", "command"), default="go")
+    parser.add_argument("--backend", choices=("go", "command"), default="go")
     parser.add_argument("--command", help="JSON argv for the command backend; library/port arguments are appended")
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument("--pattern", default=None)
@@ -72,11 +72,6 @@ def main():
         if not isinstance(command, list) or not command or not all(isinstance(x, str) for x in command):
             parser.error("command must be a nonempty JSON string array")
         os.environ["ATLAS_CONTRACT_COMMAND"] = json.dumps(command)
-    else:
-        launcher = harness.ROOT / "old" / "contract" / "python_backend.py"
-        if not launcher.is_file():
-            parser.error("Python reference is an optional local old/ archive, excluded from Git; use --backend go")
-        os.environ["ATLAS_CONTRACT_COMMAND"] = json.dumps([sys.executable, str(launcher)])
     selected_ids = None
     if args.profile:
         profiles = json.loads((Path(__file__).parent / "profiles.json").read_text())

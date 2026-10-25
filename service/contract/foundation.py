@@ -1,11 +1,10 @@
-"""Gate 2 operational orchestration with endpoint assertions on disposable libraries."""
+"""Go process ownership and restart checks with endpoint assertions on disposable libraries."""
 import argparse
 import json
 import os
 from unittest.mock import patch
 import subprocess
-import sys
-from harness import Service, ROOT, exact
+from harness import Service, exact
 
 
 def exercise(command, peer):
@@ -24,7 +23,7 @@ def exercise(command, peer):
         duplicate=subprocess.run(peer+['--library',str(service.library),'--port','0'],
             capture_output=True,timeout=5)
         if duplicate.returncode==0:
-            raise AssertionError('Cross-engine duplicate unexpectedly started')
+            raise AssertionError('Second Go process unexpectedly started')
         exact(original,json.loads((service.library/'.service/connection.json').read_text()))
         exact(pid,service.get('/health')['pid'])
         service.stop()
@@ -46,19 +45,19 @@ def exercise(command, peer):
         service.start()
         exact(expected,service.get('/api/item/'+ident))
         exact(source,service.request('/api/source/'+ident)[2])
-        print('PASS: Go restart without PATH executables, same/cross-engine ownership exclusion, schema reopen and Python endpoint readback.')
+        print('PASS: Go restart without PATH executables, ownership exclusion, schema reopen and endpoint readback.')
     finally:
         service.close()
 
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--command',required=True,help='JSON argv of the compiled Go foundation')
+    parser.add_argument('--command',required=True,help='JSON argv of the compiled Go service')
     args=parser.parse_args()
     command=json.loads(args.command)
     if not isinstance(command,list) or not command or not all(isinstance(value,str) for value in command):
         parser.error('command must be a nonempty JSON argv')
-    peer=[sys.executable,str(ROOT/'old/contract/python_backend.py')]
+    peer=command
     exercise(command,peer)
 
 

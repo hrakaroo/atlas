@@ -11,13 +11,13 @@ from reference import Canonical, capture, HERE
 
 class ReferenceContracts(unittest.TestCase):
     def test_fixed_clock_reference_matches_frozen_endpoint_baseline(self):
-        expected=json.loads((HERE/'fixtures/python-reference.json').read_text())
+        expected=json.loads((HERE/'fixtures/reference.json').read_text())
         first=capture()
         exact(expected,first)
         exact(first,capture())
 
     def test_baseline_writer_rejects_inherited_backend_override(self):
-        environment=dict(os.environ,ATLAS_CONTRACT_COMMAND='["not-the-python-reference"]')
+        environment=dict(os.environ,ATLAS_CONTRACT_COMMAND='["not-the-reference"]')
         result=subprocess.run([sys.executable,str(HERE/'reference.py'),'--write-baseline'],
                               env=environment,capture_output=True,text=True,timeout=3)
         self.assertEqual(result.returncode,2)

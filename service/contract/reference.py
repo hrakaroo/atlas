@@ -139,11 +139,11 @@ def main():
     if args.write_baseline:
         if args.command or os.environ.get('ATLAS_CONTRACT_COMMAND'):
             parser.error('Baseline creation forbids command or inherited environment overrides.')
-        command=[sys.executable,str(ROOT/'old/contract/python_backend.py')]
+        command=None
     first=capture(command)
     second=capture(command)
     exact(first,second)
-    baseline=HERE/'fixtures'/'python-reference.json'
+    baseline=HERE/'fixtures'/'reference.json'
     if args.write_baseline:
         baseline.parent.mkdir(exist_ok=True)
         baseline.write_text(json.dumps(first,ensure_ascii=False,indent=2)+'\n')

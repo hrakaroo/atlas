@@ -1,4 +1,4 @@
-"""Explicit Gate5 process/fault suite; all application outcomes use endpoints."""
+"""Go process/fault suite; all application outcomes use endpoints."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import datetime as dt
@@ -17,7 +17,6 @@ from runner import EvidenceResult
 import harness
 
 GO = None
-PYTHON = [sys.executable, str(ROOT/'old/contract/python_backend.py')]
 
 class RecoveryTests(unittest.TestCase):
     def service(self, command):
@@ -58,7 +57,7 @@ class RecoveryTests(unittest.TestCase):
             original_text='New complete source 東京',summary='New source-grounded summary')
 
     def test_failed_summary_write_preserves_state_and_retry(self):
-        for name, command in [('python',PYTHON),('go',GO)]:
+        for name, command in [('go',GO)]:
             with self.subTest(engine=name):
                 s=self.service(command); ident=self.create(s)
                 before=self.current(s,ident)
@@ -75,7 +74,7 @@ class RecoveryTests(unittest.TestCase):
                 self.assertEqual(result['summary'],'Retry succeeds')
 
     def test_failed_refresh_commit_preserves_request_source_summary_and_retry(self):
-        for name, command in [('python',PYTHON),('go',GO)]:
+        for name, command in [('go',GO)]:
             with self.subTest(engine=name):
                 s=self.service(command); ident=self.create(s)
                 s.tool('set_refresh_requested',item_id=ident,requested=True)
@@ -94,7 +93,7 @@ class RecoveryTests(unittest.TestCase):
                 self.assertEqual(after['summary'],'New source-grounded summary')
 
     def test_summary_kill_before_commit_retains_source_and_safe_retry(self):
-        for name, command in [('python',PYTHON),('go',GO)]:
+        for name, command in [('go',GO)]:
             with self.subTest(engine=name):
                 s=self.service(command); ident=self.create(s); before=self.current(s,ident)
                 folder=self.arm(s,'summary.before_commit','pause')
@@ -115,9 +114,9 @@ class RecoveryTests(unittest.TestCase):
                 s.restart()
                 self.assertEqual(self.current(s,ident)['summary'],'Recovered retry')
 
-    def test_refresh_kill_before_commit_rolls_back_consistently_across_engines(self):
-        for writer, command in [('python',PYTHON),('go',GO)]:
-            for reader, reopen in [('python',PYTHON),('go',GO)]:
+    def test_refresh_kill_before_commit_rolls_back_consistently_after_restart(self):
+        for writer, command in [('go',GO)]:
+            for reader, reopen in [('go',GO)]:
                 with self.subTest(writer=writer,reader=reader):
                     s=self.service(command); ident=self.create(s)
                     s.tool('set_refresh_requested',item_id=ident,requested=True)
@@ -141,8 +140,8 @@ class RecoveryTests(unittest.TestCase):
                     s.restart()
                     exact(after,self.current(s,ident))
 
-    def test_refresh_kill_after_commit_preserves_complete_new_snapshot_on_python_rollback(self):
-        for reader, reopen in [('python',PYTHON),('go',GO)]:
+    def test_refresh_kill_after_commit_preserves_complete_new_snapshot_after_go_restart(self):
+        for reader, reopen in [('go',GO)]:
             with self.subTest(reader=reader):
                 s=self.service(GO); ident=self.create(s); before=self.current(s,ident)
                 folder=self.arm(s,'refresh.after_commit','pause')
@@ -164,7 +163,7 @@ class RecoveryTests(unittest.TestCase):
                 exact(after,self.current(s,ident))
 
     def test_obsidian_snapshot_is_used_if_live_files_change_after_verification(self):
-        for name, command in [('python',PYTHON),('go',GO)]:
+        for name, command in [('go',GO)]:
             with self.subTest(engine=name):
                 s=self.service(command)
                 vault=s.library.parent/'synthetic-vault'; vault.mkdir()
@@ -193,7 +192,7 @@ class RecoveryTests(unittest.TestCase):
                 self.assertEqual(s.request('/api/attachment/'+ident+'?target=captions.txt')[2],captions.encode())
 
     def test_stopped_items_symlink_cannot_redirect_recovery_writes(self):
-        for name, command in [('python',PYTHON),('go',GO)]:
+        for name, command in [('go',GO)]:
             with self.subTest(engine=name):
                 s=self.service(command); ident=self.create(s); before=self.current(s,ident)
                 s.stop()
@@ -215,7 +214,7 @@ class RecoveryTests(unittest.TestCase):
                 exact(before,self.current(s,ident))
 
     def test_manual_summary_conflict_fails_closed_and_can_be_resolved(self):
-        for name, command in [('python',PYTHON),('go',GO)]:
+        for name, command in [('go',GO)]:
             with self.subTest(engine=name):
                 s=self.service(command); ident=self.create(s); before=self.current(s,ident)
                 s.stop()
@@ -235,7 +234,7 @@ class RecoveryTests(unittest.TestCase):
                 self.assertEqual(s.request('/api/source/'+ident)[2],'Old source café\r\n東京'.encode())
 
     def test_inprocess_recovery_conflict_blocks_followup_reads_and_writes_until_restart(self):
-        for name, command, reopen in [('python',PYTHON,GO),('go',GO,PYTHON)]:
+        for name, command, reopen in [('go',GO,GO)]:
             with self.subTest(engine=name):
                 s=self.service(command); ident=self.create(s); before=self.current(s,ident)
                 folder=self.arm(s,'refresh.before_commit','pause_fail')
@@ -263,9 +262,9 @@ class RecoveryTests(unittest.TestCase):
                 self.refresh(s,ident,before['revision'])
                 self.assertEqual(self.current(s,ident)['summary'],'New source-grounded summary')
 
-    def test_cross_engine_second_process_is_rejected_and_credentials_survive(self):
-        for writer, command in [('python',PYTHON),('go',GO)]:
-            for contender, other in [('python',PYTHON),('go',GO)]:
+    def test_second_process_is_rejected_and_credentials_survive(self):
+        for writer, command in [('go',GO)]:
+            for contender, other in [('go',GO)]:
                 with self.subTest(writer=writer,contender=contender):
                     s=self.service(command); ident=self.create(s); before=self.current(s,ident)
                     token=s.connection['token']; pid=s.pid
@@ -290,7 +289,7 @@ def main():
     result=unittest.TextTestRunner(verbosity=2,resultclass=EvidenceResult).run(suite)
     passed=result.testsRun>0 and result.wasSuccessful() and not result.skipped and all(t['status']=='pass' for t in result.outcomes)
     stamp=dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
-    path=ROOT/'service/.work/reports'/('gate5-recovery-'+stamp+'.json')
+    path=ROOT/'service/.work/reports'/('recovery-'+stamp+'.json')
     path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(dict(passed=passed,tests_run=result.testsRun,test_outcomes=result.outcomes,
         observed_requests=harness.OBSERVED,scope='Synthetic process interruption; no power-loss durability claim'),indent=2)+'\n')

@@ -1,4 +1,4 @@
-"""Explicit Gate5 endpoint suite: sequential engines and fresh-user config.
+"""Go endpoint checks for restart persistence and fresh-user configuration.
 
 Not part of common discovery: requires --go-command JSON with an absolute native
 binary. Process restart/env/root setup are fixture orchestration; all library
@@ -17,11 +17,10 @@ from harness import Service, ToolError, exact
 from runner import EvidenceResult
 
 GO_COMMAND = None
-PYTHON_COMMAND = [sys.executable, str(harness.ROOT / 'old/contract/python_backend.py')]
 CLOCK = '2026-10-17T10:30:00+00:00'
 
 
-class CrossEngineConfiguration(unittest.TestCase):
+class GoConfigurationContracts(unittest.TestCase):
     def service(self, command, **kwargs):
         instance = Service(command=command, clock=CLOCK, scenario=self.id(), **kwargs)
         self.addCleanup(instance.close)
@@ -41,7 +40,7 @@ class CrossEngineConfiguration(unittest.TestCase):
         return body
 
     def metadata(self, key='cross-doc', **extra):
-        value = dict(file_id=key, title='Cross engine design',
+        value = dict(file_id=key, title='Restart design',
                      created_time='2026-01-01T00:00:00Z',
                      modified_time='2026-10-17T09:00:00Z',
                      mime_type='application/vnd.google-apps.document', trashed=False)
@@ -50,10 +49,10 @@ class CrossEngineConfiguration(unittest.TestCase):
 
     def submit(self, service, key, text=None):
         if text is None:
-            source = dict(type='google_doc', title='Cross engine '+key,
+            source = dict(type='google_doc', title='Restart '+key,
                           url='https://docs.google.com/document/d/'+key+'/edit')
         else:
-            source = dict(type='zoom', title='Cross engine '+key, date='2026-10-16',
+            source = dict(type='zoom', title='Restart '+key, date='2026-10-16',
                           source_key='zoom-transcript:'+key+'/transcript.txt',
                           original_name='transcript.txt', original_text=text)
         return service.tool('submit_sources', sources=[source])['sources'][0]
@@ -72,7 +71,7 @@ class CrossEngineConfiguration(unittest.TestCase):
         service.tool('link_entity', item_ids=[document], entity_id=team['id'])
         service.tool('set_authors', item_id=document, authors=['Morgan Rivera'])
         service.tool('link_document_people', item_id=document,
-            people=[{'name':'Taylor Zhang','role':'mentioned','evidence':'Explicit source mention'}])
+            people=[{'name':'Taylor Zhang','email':'taylor@example.com','role':'mentioned','person_link':'mailto:taylor@example.com'}])
         service.tool('set_starred', item_id=document, starred=True)
         service.tool('set_date', item_id=document, date='2026-03-04',
                      expected_revision=self.item(service,document)['revision'])
@@ -149,8 +148,8 @@ class CrossEngineConfiguration(unittest.TestCase):
             ownership=service.tool('list_ownership_lookups'),
             activity=service.tool('list_activity',limit=200))
 
-    def test_python_go_python_rich_state_and_bidirectional_writes(self):
-        service = self.service(PYTHON_COMMAND,library_name='Cross engine Δ library')
+    def test_go_restart_preserves_rich_state_and_followup_writes(self):
+        service = self.service(GO_COMMAND,library_name='Restart Δ library')
         ids = self.seed(service)
         token = service.connection['token']
         before = self.snapshot(service,ids)
@@ -178,11 +177,11 @@ class CrossEngineConfiguration(unittest.TestCase):
         self.assertEqual(failed['next_attempt'],'2026-10-17T22:30:00+00:00')
         self.assertEqual(service.tool('list_ownership_lookups')['paused_until'],failed['next_attempt'])
         before = self.snapshot(service,ids)
-        service.restart(command=PYTHON_COMMAND)
+        service.restart(command=GO_COMMAND)
         exact(token,service.connection['token'])
         exact(before,self.snapshot(service,ids))
         self.assertEqual(self.submit(service,'cross-removed')['status'],'blocked')
-        service.tool('update_summary',item_id=document,summary='Edited after Python reopen',
+        service.tool('update_summary',item_id=document,summary='Edited after Go reopen',
                      expected_revision=self.item(service,document)['revision'])
         service.tool('record_ownership_lookup',item_id=ids['retry'],
             expected_revision=self.item(service,ids['retry'])['revision'],
@@ -191,7 +190,7 @@ class CrossEngineConfiguration(unittest.TestCase):
         before = self.snapshot(service,ids)
         service.restart(command=GO_COMMAND)
         exact(before,self.snapshot(service,ids))
-        self.assertEqual(self.item(service,document)['summary'],'Edited after Python reopen')
+        self.assertEqual(self.item(service,document)['summary'],'Edited after Go reopen')
         self.assertEqual(self.source(service,document),b'Updated source \xe2\x80\x94 preserved in full\n')
         self.assertEqual(self.item(service,document)['date_basis'],'manual')
 
@@ -258,17 +257,17 @@ def main():
     if (not isinstance(GO_COMMAND,list) or not GO_COMMAND or not all(isinstance(x,str) for x in GO_COMMAND)
             or not Path(GO_COMMAND[0]).is_absolute()):
         parser.error('go-command requires JSON string argv with an absolute executable path')
-    suite=unittest.defaultTestLoader.loadTestsFromTestCase(CrossEngineConfiguration)
+    suite=unittest.defaultTestLoader.loadTestsFromTestCase(GoConfigurationContracts)
     result=unittest.TextTestRunner(verbosity=2,resultclass=EvidenceResult).run(suite)
     folder=harness.ROOT/'service/.work/reports'
     folder.mkdir(parents=True,exist_ok=True)
-    report={'scope':'Gate5 cross-engine/config endpoint assertions only; no crash/fault/legacy migration claim',
+    report={'scope':'Go restart and configuration endpoint assertions',
             'go_command':GO_COMMAND,'tests_run':result.testsRun,'test_outcomes':result.outcomes,
             'passed':bool(result.testsRun and result.wasSuccessful() and not result.skipped),
             'observed_requests':harness.OBSERVED}
-    path=folder/('gate5-crossengine-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')+'.json')
+    path=folder/('configuration-'+dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')+'.json')
     path.write_text(json.dumps(report,indent=2)+'\n')
-    print('Gate5 endpoint report:',path)
+    print('Configuration endpoint report:',path)
     return 0 if report['passed'] else 1
 
 

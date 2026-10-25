@@ -50,7 +50,7 @@ The suite checks:
 
 ## Reference fixtures and reports
 
-`reference.py` compares repeated disposable Go runs with the checked-in synthetic fixture `fixtures/python-reference.json`. The filename identifies an established contract fixture, not a runtime dependency. It preserves source/history bytes, revisions, types, ordering and Activity counts, while narrowly mapping generated identities and validated paths. The full runner includes this workflow; fixture rewriting is not part of validation.
+`reference.py` compares repeated disposable Go runs with the checked-in synthetic fixture `fixtures/reference.json`. It preserves source/history bytes, revisions, types, ordering and Activity counts, while narrowly mapping generated identities and validated paths. The full runner includes this workflow; fixture rewriting is not part of validation.
 
 Each run writes an ignored report under `service/.work/reports/` with counts, individual test IDs/outcomes and observed method/path/status/tool names. Default reports omit tokens, request/response bodies, logs and source text. `--capture` adds synthetic diagnostic bodies with the exact test token and credential-bearing query values redacted. Keep reports private; captures are diagnostic evidence, not automatically accepted golden output.
 
@@ -77,4 +77,17 @@ Additional Go checks use synthetic fixtures:
 
 These cover packaged configuration/assets, real Chrome/Zoom collector submissions against fake source files, and native supervisor startup/child shutdown/lock release. They do not register an app, activate launchd or alter scheduled jobs. Signing and native process checks supplement endpoint assertions.
 
-Go unit tests also compare embedded schema SQL to the independent code-only reference under `internal/store/testdata`. That fixture contains schema definitions, not user data. See [validation status](../STATUS.md) and [deployment safeguards](../CUTOVER.md).
+Go unit tests also compare embedded schema SQL to the independent code-only reference under `internal/store/testdata`. That fixture contains schema definitions, not user data. See [validation status](../STATUS.md) and [deployment safeguards](../DEPLOYMENT.md).
+
+## Configuration and failure recovery
+
+These additional suites use only the Go service and marked synthetic libraries:
+
+```sh
+/usr/bin/python3 service/contract/configuration.py --go-command '<JSON Go argv>'
+/usr/bin/python3 service/contract/recovery.py --go-command '<JSON Go argv>'
+/usr/bin/python3 service/contract/trash_recovery.py --go-command '<JSON Go argv>'
+/usr/bin/python3 service/contract/foundation.py --command '<JSON Go argv>'
+```
+
+Use an absolute Go executable plus `--contract-mode --owner-name "John Smith" --timezone "America/Los_Angeles"` in each JSON argument array. The configuration checks preserve rich state across Go restarts and test fresh owner/timezone settings. Failure suites exercise interrupted writes, source refresh, deletion/restoration, conflicts and singleton ownership. They do not contact external source accounts or open a live library.

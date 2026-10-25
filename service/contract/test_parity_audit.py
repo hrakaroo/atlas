@@ -1,7 +1,7 @@
 """Pre-cutover audit regressions; all application observations use endpoints.
 
 Filesystem operations only prepare deliberate synthetic input/fault fixtures.
-These cases express the retained Python behavior and must pass on Go before cutover.
+These cases protect source preservation and recovery behavior through Go endpoints.
 """
 import json
 from harness import EndpointCase, ToolError

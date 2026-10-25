@@ -6,7 +6,7 @@ The Go service owns the library and serves authenticated loopback HTTP/MCP and t
 - [Endpoint contracts](contract/README.md): repeatable isolated validation.
 - [Transport inventory](contract/inventory.json): tools and routes used by contract checks.
 - [Operations](../docs/operations.md): setup, upgrades, backups and recovery.
-- [Deployment safeguards](CUTOVER.md): controlled deployment and optional local rollback.
+- [Deployment safeguards](DEPLOYMENT.md): controlled deployment and optional local rollback.
 
 Build and test from this directory with `go build ./cmd/atlas-service`, `go test ./...` and `go vet ./...`. The root repository guide includes endpoint validation and signed native builds. Generated binaries, reports and disposable libraries belong under ignored `.work/`.
 
