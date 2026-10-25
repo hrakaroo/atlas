@@ -12,7 +12,7 @@ Atlas starts with the material you already have. It brings documents and meeting
 
 - [Service validation status](service/STATUS.md): accepted checks and supported platforms.
 
-- [Architecture](docs/architecture.md): processes, data ownership, transports and migration boundary.
+- [Architecture](docs/architecture.md): processes, data ownership and transports.
 - [Repository and fresh installations](docs/repository.md): safe commits, excluded data and setup for another person.
 - [Operations](docs/operations.md): install, upgrade, diagnose, back up and move Atlas.
 - [Scheduled tasks](schedules/README.md): all five jobs, full prompts and recreation steps.
@@ -20,9 +20,9 @@ Atlas starts with the material you already have. It brings documents and meeting
 
 ## Run and architecture
 
-Atlas uses one shared background service for the native window, HTTP API, MCP tools and automation helpers. The service is the only production process that opens SQLite and manages saved library files. After service activation, the native Swift window connects to it and does not start or stop a Python backend. The active window and helpers require a configured shared service.
+Atlas uses one shared background service written in Go for the native window, HTTP API, MCP tools and automation helpers. The service is the only production process that opens SQLite and manages saved library files. The native Swift window and helpers connect to the configured service.
 
-The installed deployment uses `dist/Atlas.app` and its bundled Go service. Its database and saved files remain in `library/`. Native clients and scheduled collectors use authenticated HTTP; they never open SQLite or load an archived backend.
+The installed deployment uses `dist/Atlas.app` and its bundled Go service. Its database and saved files remain in `library/`. Native clients and scheduled collectors use authenticated HTTP; the service owns all SQLite access.
 
 For a fresh installation, install Go, Python 3 (for the client/build tools) and macOS command-line tools, and configure a reusable signing certificate as described in [operations](docs/operations.md). Then:
 
@@ -50,17 +50,17 @@ Service management:
 /usr/bin/python3 scripts/service.py start
 ```
 
-Go backend and web changes require rebuilding/signing/testing a candidate and deliberately deploying it before restarting. The Go service embeds its web assets. Rebuild/reopen the native app for wrapper changes. Retained Python uses project web files when selected for rollback. Logs live in `library/.service/stdout.log` and `stderr.log`; the launch agent definition is in `~/Library/LaunchAgents/` under the installed service label. If macOS denies background access to the project in Documents, allow Documents access for Atlas Service in System Settings → Privacy & Security → Files & Folders before activating the migration. A failed installer leaves the existing connector registration unchanged.
+Go backend and web changes require rebuilding/signing/testing a candidate and deliberately deploying it before restarting. The Go service embeds its web assets. Rebuild/reopen the native app for wrapper changes. Logs live in `library/.service/stdout.log` and `stderr.log`; the launch agent definition is in `~/Library/LaunchAgents/` under the installed service label. If macOS denies background access to the project in Documents, allow Documents access for Atlas Service in System Settings → Privacy & Security → Files & Folders during service setup. A failed installer leaves the existing connector registration unchanged.
 
-The production backend runs the bundled Go executable without Python. Collectors, lifecycle tools and HTTP clients remain Python scripts. The retired Python backend is preserved locally under ignored `old/`; a checkout does not need or include it.
+The backend runs the bundled Go executable. Collectors, lifecycle tools and HTTP clients are Python scripts.
 
 Atlas has no independent Google credentials or AI runtime. The scheduled ChatGPT workflow uses connected Google tools to read source material and generates summaries, then hands results to Atlas. Local browsing needs no external account; Google ingestion needs the connected account and scheduled workflow.
 
 ## Go service and builds
 
-Go is the installed backend, using `dist/Atlas.app`. The reviewed Go migration lives in `service/`; its native service embeds the web interface and does not invoke Python for library work. The native window always requires the shared service; HTTP clients fail closed during an outage.
+The installed Go backend uses `dist/Atlas.app`. Its source lives in `service/`, and the executable embeds the web interface. The native window always requires the shared service; HTTP clients fail closed during an outage.
 
-`zsh build-go.sh --go-service /absolute/path/to/atlas-service` creates a signed preview at `service/.work/build/Atlas.app`. It does not launch, register or install it. The preview has a separate bundle identity, requires a configured running service, and never falls back to the legacy Python UI backend. See [isolated preview operations](docs/operations.md#isolated-go-preview) for validation and the activation boundary.
+`zsh build-go.sh --go-service /absolute/path/to/atlas-service` creates a signed preview at `service/.work/build/Atlas.app`. It does not launch, register or install it. The preview has a separate bundle identity and requires a configured running service. See [isolated preview operations](docs/operations.md#isolated-go-preview) for validation and deployment safeguards.
 
 The native window selects its library from `--library /absolute/path`, then `ATLAS_LIBRARY`, then the current user's `~/Documents/Atlas/library`. The final default preserves the existing installation location without compiling a username into the app. For a clone elsewhere, pass the same explicit library to both the window and service tools. The backend's owner and timezone are explicit Go service configuration.
 
@@ -71,7 +71,6 @@ The native window selects its library from `--library /absolute/path`, then `ATL
 | `app/Atlas.swift` | Native window, shared-service connection and library path |
 | `service/internal/library/` | Active Go Library API, identity, relationships, intake, history and recovery |
 | `service/cmd/atlas-service/` | Active Go service entry point and embedded web serving |
-| `old/` | Ignored local Python archive; optional historical reference and rollback only |
 | `app/service_client.py` | Authenticated HTTP-only shared-service client |
 | `scripts/service.py` | Service installation/lifecycle, health and local MCP registration |
 | `docs/` | Architecture and operations runbooks |
@@ -79,7 +78,7 @@ The native window selects its library from `--library /absolute/path`, then `ATL
 | `scripts/collect_sources.py` | Chrome and Zoom collectors |
 | `scripts/chrome_documents.py` | Reader for Chrome’s saved session snapshot |
 | `scripts/atlas_tool.py` | Shared-service tool client for scheduled work |
-| `schedules/` | Registered-task snapshot, full prompts and operating/migration guide |
+| `schedules/` | Registered-task snapshot, full prompts and setup and operating guide |
 | `library/library.sqlite` | Private metadata, search, relationships, queues, tombstones and activity |
 | `library/items/<id>/` | Current Markdown summary, preserved originals and source history |
 | `library/imports/` | Preserved initial Obsidian imports |
@@ -169,7 +168,7 @@ url = "http://127.0.0.1:47831/mcp"
 http_headers = { Authorization = "Bearer <private service token>" }
 ```
 
-Run `scripts/service.py configure-mcp` to write the real credential locally without printing it. This preserves other connector registrations and backs up the original configuration. The endpoint is stateless: initialization, discovery and calls return JSON; notifications return 202, and standalone SSE/GET is unsupported (405). Use native HTTP registration; active clients do not start a Python fallback. Cloud-only clients cannot reach the Mac's loopback interface.
+Run `scripts/service.py configure-mcp` to write the real credential locally without printing it. This preserves other connector registrations and backs up the original configuration. The endpoint is stateless: initialization, discovery and calls return JSON; notifications return 202, and standalone SSE/GET is unsupported (405). Use native HTTP registration. Cloud-only clients cannot reach the Mac's loopback interface.
 
 The current complete tool catalog is `service/internal/transport/catalog.json`, including:
 

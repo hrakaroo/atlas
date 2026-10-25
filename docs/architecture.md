@@ -1,6 +1,6 @@
 # Atlas architecture
 
-This describes the installed Go shared service as of 2026-10-24 and the compatible retained Python rollback backend. Historical deployment evidence is retained locally under ignored `old/migration/`. See [operations](operations.md) for setup, upgrades and recovery, and [scheduled tasks](../schedules/README.md) for source collection.
+Atlas uses one Go shared service for storage and application behavior. See [operations](operations.md) for setup, upgrades and recovery, and [scheduled tasks](../schedules/README.md) for source collection.
 
 ## One database owner, several clients
 
@@ -18,7 +18,7 @@ flowchart LR
     Library --> Storage["SQLite and saved local files"]
 ```
 
-In activated shared-service mode, one Go process owns the production Library and its SQLite connection. The native supervisor starts/stops that child and supplies the macOS app identity used for Documents-folder permission. The supervisor itself does not open SQLite. The Atlas window is a separate client and can close without stopping the service.
+One Go process owns the production Library and its SQLite connection. The native supervisor starts/stops that child and supplies the macOS app identity used for Documents-folder permission. The supervisor itself does not open SQLite. The Atlas window is a separate client and can close without stopping the service.
 
 HTTP UI/API requests and MCP calls serialize at the service boundary around the single owner connection. A per-library service lock prevents a second shared service from starting; Library retains its writer lock, transaction boundaries and revision checks. Unit tests can create separate temporary Libraries. Production clients must not instantiate Library or edit database/content files directly.
 
@@ -30,19 +30,19 @@ The default service address is `http://127.0.0.1:47831`; a configured port is re
 - MCP uses stateless Streamable HTTP at `/mcp`. Initialization, tool listing and tool calls return JSON. Notifications return 202. Standalone GET/SSE and DELETE are unsupported (405).
 - MCP requires explicit authentication and enforces accepted hosts/origins. Loopback client requests bypass environment HTTP proxies.
 - `scripts/atlas_tool.py <tool>` reads JSON arguments from stdin and calls the shared service. It does not load fresh backend code for each request; restart the service to load backend changes.
-- Active clients use HTTP only. The retired Python stdio bridge exists solely in the optional ignored archive.
+- Native clients and helpers use authenticated HTTP.
 
 There is no public endpoint or tunnel. Cloud-only ChatGPT cannot reach this Mac’s loopback interface. The local desktop runtime and its connected tools provide the automation bridge.
 
 Do not print, commit or share the token, connection file, credential-bearing UI URL, or private MCP configuration. The service’s startup log omits credentials. Local service authentication is separate from the Google/Slack account connections.
 
-## Startup and migration boundary
+## Startup and lifecycle
 
 The launch agent is `local.atlas.server`. It runs the bundled `AtlasService.app` native helper, which supervises `dist/Atlas.app/Contents/Resources/bin/atlas-service` with explicit owner/timezone. The launchd job label is separate from the signed helper bundle identifier. launchd starts it at login and restarts an exited job while loaded.
 
 The installer creates the private connection settings and launch agent, starts the service, and checks health. `configure-mcp` checks health again before updating the existing `atlas` MCP registration and writing `library/.service/enabled`.
 
-Native windows and HTTP helpers always require the service; they never construct a backend, including for a new unconfigured library. The activation marker remains for compatibility with the optional retired archive. Do not remove it or start another owner to work around an outage.
+Native windows and HTTP helpers always require the service; they never construct a backend, including for a new unconfigured library. Repair service availability rather than starting another database owner to work around an outage.
 
 Closing Atlas ends its UI process. Closing ChatGPT ends its scheduler/client availability. Neither action stops the activated launchd service. These are three separate lifecycles.
 
@@ -81,28 +81,26 @@ The right-hand panel stays mounted; unchanged markup is skipped and changed node
 | `app/Atlas.swift` | Native window and Go service supervisor |
 | `service/cmd/atlas-service/`, `internal/transport/` | Active single-owner Go HTTP/API and MCP service |
 | `service/internal/library/`, `internal/store/` | Active storage, identity, relationships, revisions and recovery |
-| `old/app/server.py` | Retained Python HTTP/MCP backend and stdio compatibility |
 | `app/service_client.py` | Private connection settings and HTTP-only tool calls |
-| `old/app/library.py` | Compatible retained Python Library and reference implementation |
 | `scripts/service.py` | Documents access request, launch agent installation/lifecycle and local MCP configuration |
 | `scripts/collect_sources.py` | Local source collection and service submission |
 | `scripts/atlas_tool.py` | JSON-stdin service tool client |
 | `web/app.js` | Browsing, stable context panel and local change display |
 | `scripts/export_schedules.py` | Export actual task registrations; does not register or run jobs |
 
-Installation selects the signed Go app plus explicit owner/timezone. Python is used only for HTTP clients and build/test orchestration; the retired backend is an optional ignored local archive.
+Installation selects the signed Go app plus explicit owner/timezone. Python is used for HTTP clients, collectors and build/test orchestration.
 
-## Migration history observability
+## Saved source and summary history
 
-The Go migration adds authenticated read-only history routes: GET /api/history/<item_id> lists opaque entry IDs for current/older originals and summaries; GET /api/history/<item_id>/<entry_id> reads exact saved bytes. Only known summary revisions are labeled. UUID source snapshots have no invented chronology. Trashed items are excluded. Paths and symlink components are rejected, and reads use descriptor-relative no-follow opens. This API is for preservation checks; existing UI and MCP contracts stay unchanged. No running production service is switched by adding these routes to source.
+Authenticated read-only history routes expose saved content: GET /api/history/<item_id> lists opaque entry IDs for current/older originals and summaries; GET /api/history/<item_id>/<entry_id> reads exact saved bytes. Only known summary revisions are labeled. UUID source snapshots have no invented chronology. Trashed items are excluded. Paths and symlink components are rejected, and reads use descriptor-relative no-follow opens. These routes support source inspection and preservation checks.
 
 
-## Optional native Go packaging
+## Native packaging
 
-The installed service is Go, deployed at `dist/Atlas.app`. Active wrapper/build/install code is Go-only; the retired Python implementation and original wrapper live in ignored `old/`. The Go executable embeds its web assets; Python remains available for explicit rollback. Both implement the same authenticated loopback UI/API/MCP contracts and use the same data format, locks and connection-file credentials; only one backend may own a library at a time.
+The installed service is deployed at `dist/Atlas.app`. The Go executable embeds its web assets, and only one service process may own a library at a time.
 
-The active native supervisor accepts only `--go-service /absolute/path/to/atlas-service`, plus explicit library, port, owner name and timezone. It starts `--serve` directly and forwards termination. Tests may select guarded `--contract-mode`; no HTTP request can activate test controls. The original dual-backend supervisor is preserved only in `old/`.
+The active native supervisor accepts only `--go-service /absolute/path/to/atlas-service`, plus explicit library, port, owner name and timezone. It starts `--serve` directly and forwards termination. Tests may select guarded `--contract-mode`; no HTTP request can activate test controls.
 
 `build-go.sh` assembles a separate preview with identifier `local.atlas.go-preview` and helper `local.atlas.go-preview.service`. It signs the embedded binary, helper and outer app with the configured reusable certificate, then verifies the bundle. It does not register the bundles or install a launch agent. Its `AtlasRequireService` property makes the native window fail closed when its service is missing; the native window always requires a configured shared service.
 
-The native window library precedence is command-line `--library`, `ATLAS_LIBRARY`, then the current user's Documents/Atlas/library. There is no active legacy startup fallback. Neither this configuration nor packaging changes connector registrations or scheduled tasks.
+The native window library precedence is command-line `--library`, `ATLAS_LIBRARY`, then the current user's Documents/Atlas/library. Window configuration and packaging do not change connector registrations or scheduled tasks.

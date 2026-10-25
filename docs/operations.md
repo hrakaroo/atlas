@@ -4,11 +4,11 @@ Commands below run from the Atlas project directory. They describe setup and mai
 
 ## Installed Go deployment
 
-The signed Go deployment is `dist/Atlas.app`, supervised under the launchd job label `local.atlas.server`. Status/start/stop/restart manage that Go job. The service opens the existing library in place; no export/re-import is involved. Historical deployment records are retained locally under ignored `old/migration/`.
+The signed Go deployment is `dist/Atlas.app`, supervised under the launchd job label `local.atlas.server`. Status/start/stop/restart manage that Go job. The service opens the existing library in place; no export/re-import is involved.
 
 ## Fresh Go setup
 
-Use the commands in the root README. `zsh build.sh` now builds/signs Go by default into `build/Atlas.app`; it never modifies or registers the active `dist` app. `scripts/service.py install` now installs a Go supervisor and requires the owner name and timezone. It verifies the app signature before modifying launch configuration. Use `--app` and `--library` consistently; create a new empty library folder before requesting Documents access.
+Use the commands in the root README. `zsh build.sh` builds/signs the Go app into `build/Atlas.app`; it never modifies or registers the active `dist` app. `scripts/service.py install` installs a Go supervisor and requires the owner name and timezone. It verifies the app signature before modifying launch configuration. Use `--app` and `--library` consistently; create a new empty library folder before requesting Documents access.
 
 `request-access` opens the selected app's native helper to request ordinary macOS access. `configure-mcp` checks health, preserves unrelated connector settings and writes credentials locally without printing them. Installation does not configure Google/Slack connections or register scheduled jobs.
 
@@ -16,7 +16,7 @@ For upgrades, build/sign/test an isolated candidate first. Back up the complete 
 
 ## Stable signing for local builds
 
-The build signs Atlas and its nested service helper with the Keychain identity named `Atlas Local Development`. It no longer silently signs ad hoc. Keep using the same certificate/private key across rebuilds; creating a different certificate with the same name is not the same signing identity.
+The build signs Atlas and its nested service helper with the Keychain identity named `Atlas Local Development`. Builds require a reusable signing identity. Keep using the same certificate/private key across rebuilds; creating a different certificate with the same name is not the same signing identity.
 
 For another approved identity, set `ATLAS_SIGNING_IDENTITY` to its unambiguous certificate name or fingerprint when running the build. Signing happens inside-out (helper first, enclosing app second), followed by strict signature verification. No private keys are stored in this repository.
 
@@ -40,15 +40,14 @@ Status checks authenticated health and reports the service identity, library pat
 | Changed component | Required action |
 | --- | --- |
 | `service/` backend / embedded web | Build, test and sign an isolated candidate; deliberately deploy/restart the Go owner |
-| Local `old/` archive | Historical reference/explicit rollback only; never a runtime dependency |
 | `app/service_client.py` HTTP client | New client invocations use the updated client; no backend replacement |
 | Native Swift window or helper / app icon | Build again; reopen Atlas; restart the service when its helper changed |
-| `web/` | Go: regenerate embedded assets and rebuild/deploy; Python rollback: reload project-served assets |
-| Installation location or Python runtime | Stop the old service, update paths, rebuild if needed, reinstall and verify health |
+| `web/` | Regenerate embedded assets and rebuild/deploy |
+| App installation location | Stop the current service, update paths, rebuild if needed, reinstall and verify health |
 | Registered scheduled prompt/cadence/state | Update with desktop automation tools, then export schedule definitions |
 | Shared intake instructions | Edit `schedules/intake-processing.md`; collection jobs read this file during runs |
 
-A helper invocation no longer reloads backend code. Rebuilding alone does not restart a running shared service. Restarting Atlas alone does not restart it either.
+A helper invocation connects to the running backend; it does not reload backend code. Rebuilding alone does not restart a running shared service. Restarting Atlas alone does not restart it either.
 
 ## Troubleshooting
 
@@ -56,7 +55,7 @@ A helper invocation no longer reloads backend code. Rebuilding alone does not re
 | --- | --- |
 | Atlas reports service unavailable | Run status, then start or restart. Read the private service logs if health still fails. |
 | Installation cannot read Documents | Allow normal Documents access for Atlas Service under System Settings → Privacy & Security → Files & Folders; rerun request-access/install. Do not reset or bypass privacy controls. |
-| MCP still launches an old per-client process | After healthy installation, run configure-mcp and restart ChatGPT. Activated `--mcp` compatibility mode only forwards HTTP. |
+| MCP connects to the wrong service | After healthy installation, run configure-mcp and reconnect the client. Check its configured endpoint without exposing credentials. |
 | Tool changes do not appear | Restart the service, then reconnect the MCP client. The helper also uses that same service catalog. |
 | Port/library mismatch or duplicate service | Confirm the intended library and connection settings without exposing the token. Stop the old job before changing its port/location. Do not start a second database owner. |
 | Chrome tab has not imported | Saved sessions can lag. Check collector output and Atlas pending intake; untitled drafts and tombstoned IDs are excluded. Up to five new items are processed per run. |
@@ -64,7 +63,7 @@ A helper invocation no longer reloads backend code. Rebuilding alone does not re
 | Refresh request remains checked | Failed/incomplete reads stay queued. Inspect the scheduled run’s reason; do not clear the flag to acknowledge an unsuccessful refresh. |
 | Generic icon remains in the Dock | Quit Atlas, remove the old shortcut and drag the rebuilt app into the Dock while closed. |
 
-Do not delete `library/.service/enabled` to restore an old fallback during an outage. Repair service availability. After activation, failure rather than a second database connection is intentional.
+If the service is unavailable, clients fail closed. Repair service availability; do not bypass it with direct database access.
 
 ## Private runtime files
 
@@ -76,9 +75,9 @@ Do not delete `library/.service/enabled` to restore an old fallback during an ou
 | `library/.service/stdout.log`, `stderr.log` | Service diagnostics; review before sharing |
 | `~/Library/LaunchAgents/local.atlas.server.plist` | Per-user login/start/restart definition |
 | `$CODEX_HOME/config.toml` | Local MCP registration, including private authentication |
-| `$CODEX_HOME/config.toml.before-atlas-http` | Protected pre-migration configuration backup |
+| `$CODEX_HOME/config.toml.before-atlas-http` | Protected backup of the previous MCP configuration |
 
-Do not commit runtime files, source snapshots, backups, cookies or credentials. Local scheduling exports contain internal workflow/channel details and belong in a private repository. Do not expose the loopback service with a public proxy or tunnel.
+Do not commit runtime files, source snapshots, backups, cookies or credentials. Local scheduling exports may contain internal workflow/channel details; keep private exports out of source control. Do not expose the loopback service with a public proxy or tunnel.
 
 ## Backups and moving machines
 
@@ -86,7 +85,7 @@ Use Atlas’s backup action for a consistent copy of SQLite plus item files. Do 
 
 For an existing library, the validated backup restore/handoff reopens at the same original absolute root: saved source paths are absolute. Relocating existing data to another root or username requires a separately reviewed path-rebase procedure and has not been accepted or implemented here. A fresh library for another account, explicit root, owner and timezone is supported and tested. On another Mac, keep the consistent private backup separate from source code and plan that relocation before opening it. Do not reuse the previous Mac’s `.service` connection/activation/lock/log files, launch agent or MCP credentials. Preserve library data, queues and tombstones; run fresh service installation/configuration for that Mac. Set the native `--library`/`ATLAS_LIBRARY` and registered paths consistently first. Do not start the restored app against stale runtime settings.
 
-Recreate scheduled jobs using [the schedule migration instructions](../schedules/README.md), new destination chat IDs and current account connections. Copying the manifest or prompts does not register jobs.
+Recreate scheduled jobs using [the schedule setup instructions](../schedules/README.md), new destination chat IDs and current account connections. Copying the manifest or prompts does not register jobs.
 
 ## Checks
 
@@ -98,14 +97,14 @@ for test_file in tests/test_*.js; do /opt/homebrew/bin/node "$test_file" || exit
 zsh build.sh
 ```
 
-The service tests use a temporary library and exercise HTTP/MCP/client parity, authentication, serial ownership and migration behavior. They do not justify opening production SQLite from client scripts.
+The service tests use a temporary library and exercise HTTP/MCP/client parity, authentication, serial ownership and schema compatibility/recovery. They do not justify opening production SQLite from client scripts.
 
 For documentation-only updates, verify links, commands against their parsers, and exported prompts/settings against registered definitions. A documentation update does not require restarting the production service.
 
 
 ## Isolated Go preview
 
-The production Go service is active at `dist/Atlas.app`. New candidate builds remain isolated and do not authorize replacing the active owner. The Go executable's release mode is `--serve` with an absolute library, nonblank `--owner-name` and explicit IANA `--timezone`; contract-only clocks/fault controls are rejected in release mode. Do not launch it on the existing library during migration validation.
+The production Go service is active at `dist/Atlas.app`. New candidate builds remain isolated and do not authorize replacing the active owner. The Go executable's release mode is `--serve` with an absolute library, nonblank `--owner-name` and explicit IANA `--timezone`; contract-only clocks/fault controls are rejected in release mode. Do not launch it on the existing library during candidate validation.
 
 Build the native preview using an already reviewed Go candidate. With the pinned module cache available, compile the current source first:
 
@@ -123,8 +122,6 @@ The packager verifies generated embedded web bytes against canonical `web/` befo
 
 The default output is ignored `service/.work/build/Atlas.app`; `--output-directory /absolute/directory` selects another isolated output. No Launch Services registration, launchd changes, MCP changes, schedules or app launch occur. The preview includes its Go service under `Contents/Resources/bin/atlas-service` and uses the same certificate selection as normal builds, with no ad-hoc fallback. Rebuilding stages a new verified bundle before replacing that output.
 
-The retired Python backend, its original Swift/build scripts and Python-specific tests live in ignored `old/`. Its optional reference tests use `service/contract/runner.py --backend python`. They are not required for a fresh checkout. For a deliberate Python rollback, first stop Go, then use the archived `old/scripts/service.py` with an explicit real library and `old/build/Atlas.app`; do not use saved pre-layout plists containing retired paths. A checkout without the local archive cannot perform that historical Python rollback.
-
 A concrete Go launch specification can be inspected without writes, network requests or registration:
 
 ```sh
@@ -134,11 +131,11 @@ A concrete Go launch specification can be inspected without writes, network requ
   --owner-name 'Your Full Name' --timezone America/Los_Angeles
 ```
 
-The Go launch specification uses the resolved existing library directory as its working directory; it does not require the source checkout for backend startup. The retained Python specification still uses the checkout. Record source/artifact fingerprints for each new candidate in private local deployment evidence.
+The Go launch specification uses the resolved existing library directory as its working directory; it does not require the source checkout for backend startup. Record source/artifact fingerprints for each new candidate in private local deployment evidence.
 
-`install` now targets Go by default and uses the production job label. A printed launch specification is still read-only; never run an experimental owner against the live library. Pause scheduled writes, create/verify a complete backup, stop the old owner and deliberately install the reviewed signed candidate before checking health, data and clients. Never run both engines or remove activation markers to bypass outages.
+`install` targets the Go service and uses the production job label. A printed launch specification is still read-only; never run an experimental owner against the live library. Pause scheduled writes, create/verify a complete backup, stop the old owner and deliberately install the reviewed signed candidate before checking health, data and clients. Never run two owners or remove service configuration to bypass outages.
 
-Native UI selection uses `--library`, then `ATLAS_LIBRARY`, then `~/Documents/Atlas/library` for the current account. A clone at a different location must use a consistent explicit root for window and service. `--require-service` or the Go preview's built-in requirement makes missing service settings an error rather than starting a separate backend.
+Native UI selection uses `--library`, then `ATLAS_LIBRARY`, then `~/Documents/Atlas/library` for the current account. A clone at a different location must use a consistent explicit root for window and service. The native window requires valid shared-service settings.
 
 For automated native helper smoke tests, use `service/contract/gate6_helper.py --app <absolute-built-app> --go-service <absolute-built-app>/Contents/Resources/bin/atlas-service`. It creates its own marked temporary library, checks the backend is the helper's child, exercises real HTTP clients and full preserved bytes, terminates the helper, verifies child shutdown and lock release, and reopens through Go. It never calls launchd or registers an app. Run the common endpoint contracts directly against the packaged Go executable as well; a helper's PID differs from its child, so the ordinary harness readiness check is deliberately unchanged.
 

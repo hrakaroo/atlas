@@ -1,143 +1,80 @@
 # Endpoint contracts
 
-This standard-library Python runner tests independently launched disposable Atlas
-services through HTTP and HTTP MCP. It never imports Library, SQLite, application
-clients or Go internals for behavioral setup/assertions. Each EndpointCase gets a
-fresh synthetic root, fresh credentials and an ephemeral loopback port.
+The standard-library Python runner launches the Go service against disposable synthetic libraries and tests it through HTTP and HTTP MCP. It does not import Library, SQLite, application clients or Go internals for behavioral assertions. Python orchestrates the tests; Go owns the tested application behavior.
+
+Each test gets a fresh synthetic library, fresh credentials and an ephemeral loopback port. The harness refuses caller-supplied live roots and external service addresses. Clock/fault controls are restricted to marked test libraries.
+
+## Build and run
 
 From the repository root:
 
 ```sh
+(cd service && CGO_ENABLED=0 go build -trimpath -o .work/atlas-service ./cmd/atlas-service)
 /usr/bin/python3 service/contract/runner.py --capture
 /usr/bin/python3 service/contract/runner.py --pattern test_core.py
-/usr/bin/python3 service/contract/runner.py --backend command --command '["/absolute/path/to/alternate-service"]'
 ```
 
-A command receives appended `--library <owned-disposable-root> --port 0`.
-It must write the protected compatible connection settings and support the
-existing endpoints. Commands are argument arrays, never shell text. No default
-or command option accepts a live library or external service address.
+The default binary is `service/.work/atlas-service`. To test an explicit candidate, including a packaged executable:
 
-The default backend is Go at `service/.work/atlas-service`, built with CGO disabled. Every process uses a marked disposable library. `--backend command --command '["/absolute/binary","--contract-mode","--owner-name","Your Name","--timezone","UTC"]'` selects another built Go candidate.
+```sh
+/usr/bin/python3 service/contract/runner.py --backend command \
+  --command '["/absolute/path/to/atlas-service","--contract-mode","--owner-name","John Smith","--timezone","America/Los_Angeles"]' \
+  --capture
+```
 
-The explicit `--backend python` option requires local `old/contract/python_backend.py` and the ignored archived backend. It fails clearly if that optional archive is absent. Cross-engine specialized packs are historical optional checks; ordinary checkout tests and native Go helper smoke require no archived Python files. Process clocks/fault controls remain confined to marked fixtures.
+The harness appends `--library <owned-disposable-root> --port 0`. Commands are argument arrays, never shell text. Use the fictional owner `John Smith` for the current suite because owner-sensitive assertions expect that identity.
+
+All `test_*.py` files in this directory join normal discovery. `--pattern` selects a focused subset. A selected subset is not a substitute for the full suite. Empty discovery, failures, errors, skipped tests and expected failures produce a failing exit status.
 
 ## Test helper interface
 
-`EndpointCase` provides `request(path, payload=None, method=None, headers=None)`
-returning (status, headers, raw bytes), `get`, `post`, `tool(tool_name, **args)`
-and `restart(clock=None)`. `tool` decodes the MCP text JSON and raises
-`ToolError` for a tool-level error. Use `request` when asserting HTTP errors,
-exact source bytes or response headers.
+`EndpointCase` provides `request(path, payload=None, method=None, headers=None)`, returning `(status, headers, raw_bytes)`, plus `get`, `post`, `tool(tool_name, **args)` and `restart(clock=None)`. `tool` decodes MCP text JSON and raises `ToolError` for a tool-level error. Use `request` for HTTP errors, source bytes and response headers.
 
-`self.service` exposes `library`, `pid`, `process`, `start`, `stop`,
-`restart`, and `restore_backup`/`reopen_backup`. The library Path is for
-approved fixture/process orchestration only; never inspect its database/item
-files as assertions. Reading connection settings/permissions is operational
-connection evidence, not application state inspection.
+`self.service` exposes `library`, `pid`, `process`, `start`, `stop`, `restart`, `restore_backup` and `reopen_backup`. The library path is only for fixture/process orchestration. Never inspect its database or item files to assert application behavior. Reading connection settings and permissions is operational connection evidence.
 
-Backup reopening accepts only an endpoint-returned backup inside that service's
-own disposable `library/backups`, rejects symlinks, stops the process, copies
-the fixture before replacing the disposable library, and restarts at the same
-root. Existing saved source paths are absolute; this proves same-root restore,
-not cross-root relocation. All resulting content is checked through endpoints.
-Service refuses caller-supplied library roots. Failed startup stops its process
-and cleans the temporary directory.
+Backup reopening accepts only an endpoint-returned backup inside the service's own disposable `library/backups`, rejects symlinks, stops the process, restores the fixture and restarts at the same root. This validates same-root restore, not cross-root relocation. Assert restored state through endpoints. Failed startup stops its process and cleans the temporary directory.
 
-## Scope and comparison rules
+## Coverage and comparison rules
 
-The complete advertised MCP input schema map has a frozen SHA-256 fingerprint
-captured from the reviewed Python endpoint, including nested types and enums.
-Tests do not regenerate it. Tool order is checked against the reviewed inventory.
+The suite checks:
 
-The core/transport scenarios freeze:
-- HTTP authorization, Host/Origin, cookie versus MCP token scope, URL-token scope,
-  static delivery/security headers, inherited method errors, malformed/oversized
-  requests, protocol negotiation, notification, tool catalog and error envelopes.
-- Imports across existing record kinds, exact Unicode/CRLF source bytes/hash,
-  full response key/type shape, UI/MCP cross-surface reads/writes, revision conflicts,
-  date/star/tag/undo behavior and change-counter semantics.
-- Canonical Google ID/resourcekey identity, duplicate quietness, title/full-text
-  search, phrase/prefix/accent/CJK behavior, ranking and combined filters.
-- Restart persistence, simultaneous same-revision edits (one winner and one
-  activity event), endpoint-created backup restore/read-back.
+- HTTP/MCP authentication, Host/Origin handling, cookie/token scope, security headers, protocol negotiation, method errors, catalog schemas and error envelopes.
+- Imports, canonical source identity, duplicate/tombstone handling, full original bytes, dates, stars, tags, relationships and revision conflicts.
+- Title/full-text search, ranking, phrases, prefixes, accents and non-Latin text.
+- Ownership, structured document mentions, meeting participants, series, feeds, refresh queues and retry behavior.
+- Restart persistence, concurrent writes, saved history, backup restoration and bounded recovery behavior.
 
-`exact` is recursive and strict about types, keys, absent versus null, list
-length/order and bytes. Self-tests deliberately mutate revisions, source bytes
-and event counts and prove rejection. `IdMap` offers an explicit bijection for
-generated IDs; identity rewriting is never automatic. Dynamic roots/ports/PIDs/
-timestamps must be asserted or normalized explicitly in each future comparison.
-Do not mask changes by sorting, string coercion or broad golden rewrites.
+`inventory.json` specifies the advertised tools and route branches. Schema checks use a frozen fingerprint; do not regenerate expectations merely to make a failure pass. The `exact` comparator is strict about types, keys, absent versus null, list order and bytes. Self-tests alter revisions, source bytes and event counts to verify rejection.
 
-These are executable expected-behavior scenarios, not a claim of complete
-differential coverage. The same scenarios can select another implementation.
-Historical migration, all workflow tools, crash/fault recovery, native packaging
-and full Python↔Go differential/rollback acceptance remain separate required
-scenario packs and gates. Passing this subset does not pass Gate 1 or authorize
-Go cutover. Other `test_*.py` files placed in this directory join the runner.
+`IdMap` explicitly maps generated identities. Dynamic roots, ports, PIDs and timestamps require narrow assertions or normalization. Do not hide differences through broad string replacement, sorting or golden-fixture rewrites. Synthetic legacy schema setup is a fixture exception; logical state is still asserted through endpoints.
 
-Each run writes an ignored `service/.work/reports/<backend>-<time>.json`
-with test counts, individual test IDs and outcomes, and actually observed
-method/path/status/tool names.
-Reports omit tokens, request/response payloads, process logs and source text.
-Observed endpoint invocation is not an assertion of complete tool coverage.
-Skipped tests, expected failures and empty discovery produce a failing runner exit. No baseline is rewritten on failure.
+## Reference fixtures and reports
 
-## Diagnostic capture versus differential baseline
+`reference.py` compares repeated disposable Go runs with the checked-in synthetic fixture `fixtures/python-reference.json`. The filename identifies an established contract fixture, not a runtime dependency. It preserves source/history bytes, revisions, types, ordering and Activity counts, while narrowly mapping generated identities and validated paths. The full runner includes this workflow; fixture rewriting is not part of validation.
 
-Add --capture to record per-scenario synthetic requests/responses (parsed JSON or base64 bytes) in the
-ignored report. The exact test token is redacted, and credentials/request headers
-are never recorded; token query values are explicitly redacted. Dynamic IDs, roots, ports and times stay explicit. These are
-diagnostic captures, not accepted normalized golden output.
+Each run writes an ignored report under `service/.work/reports/` with counts, individual test IDs/outcomes and observed method/path/status/tool names. Default reports omit tokens, request/response bodies, logs and source text. `--capture` adds synthetic diagnostic bodies with the exact test token and credential-bearing query values redacted. Keep reports private; captures are diagnostic evidence, not automatically accepted golden output.
 
-The complete normalized baseline was delivered in Gate 1 and remains frozen.
-Reviewed per-field identity/time/root rules permit differential replay. Broad
-UUID/string/timestamp replacement remains absent because it could hide identity
-mistakes, broken hashes or changed source bytes.
+Run the transport audit against a report created with `--capture`:
 
-## Reviewed Python reference and transport audit
+```sh
+/usr/bin/python3 service/contract/coverage.py /absolute/path/to/report.json
+```
 
-Run the complete endpoint suite with /usr/bin/python3 service/contract/runner.py --backend python --capture. The runner fails on empty discovery, failures, errors or skipped/expected-failure cases, and saves ignored reports with individual test IDs/outcomes.
+Observed tool/route use establishes transport coverage only. Domain correctness requires the scenario assertions themselves. A passing subset or report does not authorize deployment.
 
-Run /usr/bin/python3 service/contract/reference.py to compare two new disposable runs with fixtures/python-reference.json. The reference uses a fixed process clock and narrowly mapped generated identities/validated paths; source hashes, bytes, revisions, types, ordering and event counts stay exact. Baseline rewriting requires explicit --write-baseline and rejects command/environment overrides. It is never part of validation. The reference is one stateful golden workflow; other endpoint scenarios assert their own behavioral expectations rather than comparing arbitrary raw traces.
+## Packaged and native validation
 
-Run /usr/bin/python3 service/contract/coverage.py <report.json> to audit actual successful use of every advertised tool and HTTP branch. This is transport coverage, not proof that every domain invariant is asserted; pair it with the scenario evidence ledger and independent review.
+Run the full runner against the exact signed packaged executable. Go embeds the canonical web assets, so no external web directory is required. Packaging checks embedded-asset freshness and pinned dependency notices.
 
-The original Gate 1 Python baseline comprised 61 passing contract tests; the current strengthened common suite has 87 tests, including source history, backup recovery at the same library path, external-edit reconciliation, reference labels, combined search filters, ownership cooldowns, ambiguous intake and races. Gate 5 additionally runs explicit cross-engine/configuration, recovery and Trash interruption suites; these require both executables and stay outside ordinary discovery.
+Additional Go checks use synthetic fixtures:
 
-## Gate 3 acceptance profile
+```sh
+/usr/bin/python3 service/contract/gate6_binary.py --binary /absolute/Atlas.app/Contents/Resources/bin/atlas-service
+/usr/bin/python3 service/contract/gate6_collectors.py --binary /absolute/Atlas.app/Contents/Resources/bin/atlas-service
+/usr/bin/python3 service/contract/gate6_helper.py --app /absolute/Atlas.app \
+  --go-service /absolute/Atlas.app/Contents/Resources/bin/atlas-service
+```
 
-Run `/usr/bin/python3 service/contract/runner.py --backend python --profile gate3`
-to establish this explicit subset against Python, then select the compiled Go
-command with the same profile. The reviewed `profiles.json` names 24 individual
-cases: six core, two search, five preservation, one core history, five
-transport/comparator cases, one JSON-fidelity, one argument-boundary and three
-date/source-identity regressions. Reports retain the profile and all selected test IDs.
+These cover packaged configuration/assets, real Chrome/Zoom collector submissions against fake source files, and native supervisor startup/child shutdown/lock release. They do not register an app, activate launchd or alter scheduled jobs. Signing and native process checks supplement endpoint assertions.
 
-The new history case uses imports and summary edits, so it validates original
-bytes and all summary revisions without requiring Gate 4 document refresh.
-Profile selection does not mark other tests skipped or remove them from normal
-full-suite discovery. Backup, refresh, relationship workflows and full recovery
-remain required in their existing tests and later acceptance gates.
-`--pattern` and `--profile` are mutually exclusive. A missing selected test
-becomes a failing unittest loader case rather than silently disappearing.
-
-## Complete domain acceptance
-
-Gate 4 historically passed the full 79-test suite twice on Go and once on Python, including the frozen reference workflow. The current Go suite uses the fictional owner `John Smith`; supply `--owner-name "John Smith"` when running it through an explicit command. Historical acceptance records retain their original configuration. The archived Python implementation hardcodes its original owner for meeting grouping, so its owner-sensitive comparisons require the matching historical test revision rather than the current Go fixtures. That historical gate covered domain behavior; persistence, configuration and packaging were accepted separately in Gates 5–6. Historical reports are retained under ignored `old/migration/plan/`.
-
-## Gate 5 persistence and recovery
-
-The common 87 tests pass on both engines. Run gate5_crossengine.py, gate5_recovery.py and gate5_trash_recovery.py with --go-command containing a JSON argv for the absolute compiled executable, --contract-mode, --web-root and the synthetic reference owner. The original Gate 5 suites contained 4, 9 and 4 tests; the strengthened recovery suite now contains 10, including the in-process restart-required boundary. Test loops exercise additional writer/reader combinations without inflating the named test count. Reports retain named outcomes.
-
-Synthetic legacy schema construction is a fixture setup exception; all logical-state assertions use endpoints. Test-only fault orchestration requires marked temporary fixture roots. No fault endpoint exists. Current compatible Python and Go understand the same refresh/Trash recovery intents. Original baseline Python does not. Historical reports are retained under ignored `old/migration/plan/`.
-
-## Gate 6 packaged execution
-
-Run the common suite with the signed packaged executable, then repeat gate5_crossengine.py, gate5_recovery.py and gate5_trash_recovery.py against that same executable. No external web directory is needed: canonical web bytes are compiled into the native service. The real Chrome/Zoom collectors remain Python HTTP clients.
-
-Run gate6_binary.py and gate6_collectors.py with --binary naming the packaged executable. Their three and two tests cover embedded assets/configuration and actual synthetic collector CLI submissions. gate6_helper.py accepts --app, --go-service and --backend to exercise the signed supervisor with the packaged native binary, retained client, child termination and Go library reopen. It performs no registration or launchd activation.
-
-Go build checks pinned offline dependency notices and canonical embedded-web freshness. Historical reports are retained under ignored `old/migration/plan/`.
-
-The default Go unit suite compares schema SQL to a frozen code-only Python reference under `internal/store/testdata`; no backend import is needed. The optional `go test -tags=atlas_python_reference ./internal/store` comparison requires local old/. Other cross-engine/fault packs are explicitly optional historical tests with that same archive requirement.
+Go unit tests also compare embedded schema SQL to the independent code-only reference under `internal/store/testdata`. That fixture contains schema definitions, not user data. See [validation status](../STATUS.md) and [deployment safeguards](../CUTOVER.md).

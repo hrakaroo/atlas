@@ -10,4 +10,4 @@ The Go service owns the library and serves authenticated loopback HTTP/MCP and t
 
 Build and test from this directory with `go build ./cmd/atlas-service`, `go test ./...` and `go vet ./...`. The root repository guide includes endpoint validation and signed native builds. Generated binaries, reports and disposable libraries belong under ignored `.work/`.
 
-The completed migration evidence and retired Python backend are retained locally under ignored `old/`; neither is required by default checkout validation or runtime. The transport inventory remains with the active tests.
+The transport inventory and synthetic fixtures remain with the active tests. Default builds and validation work from a fresh checkout.
