@@ -2,6 +2,12 @@
 
 Atlas is a private local macOS library for documents, meetings, projects, work contacts, interviews and feeds.
 
+## Motivation
+
+AI makes it easier to create documents, capture meetings, and generate summaries. The harder problem is keeping that growing body of information organized and useful.
+
+Atlas starts with the material you already have. It brings documents and meeting transcripts into a local library, connects them to people and projects, and makes them easier to find and revisit. It’s built around organizing your work, with no separate note-taking habit required.
+
 ## Documentation
 
 - [Service validation status](service/STATUS.md): accepted checks and supported platforms.
