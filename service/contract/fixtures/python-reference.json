@@ -1,0 +1,702 @@
+{
+  "health": {
+    "service": "atlas",
+    "version": "0.2.0"
+  },
+  "import": {
+    "id": "item:reference",
+    "duplicate": false
+  },
+  "before": {
+    "id": "item:reference",
+    "title": "Reference document",
+    "kind": "document",
+    "date": "2026-01-01",
+    "summary": "Reference summary",
+    "source_key": "google-doc:reference",
+    "source_path": "<LIB>/items/<reference>/originals/reference.txt",
+    "source_hash": "c26632f415debbf4b661d31e302b3947b89a0de0a5f7e4dd61fa514a3bf6cb9f",
+    "metadata": {
+      "doc_urls": [
+        "https://docs.google.com/document/d/reference/edit"
+      ],
+      "date_basis": "source"
+    },
+    "revision": 1,
+    "created": "2030-02-03T04:05:06+00:00",
+    "updated": "2030-02-03T04:05:06+00:00",
+    "period_start": null,
+    "period_end": null,
+    "source_channel": null,
+    "inbox": 1,
+    "deleted_at": null,
+    "starred": 0,
+    "date_basis": "source",
+    "authors": [],
+    "tags": [
+      {
+        "id": "tag:type:Document",
+        "name": "Document",
+        "category": "type"
+      }
+    ],
+    "is_interview_candidate": false,
+    "is_interview": false,
+    "links": [],
+    "relationships": [],
+    "participants": [],
+    "document_people": [],
+    "projects": [],
+    "series": null,
+    "blog_feed": null,
+    "source_links": [
+      {
+        "url": "https://docs.google.com/document/d/reference/edit",
+        "kind": "document",
+        "label": "Reference document",
+        "primary": true,
+        "atlas_id": "item:reference"
+      }
+    ]
+  },
+  "source_before": "5265666572656e636520636166c3a90d0ae69db1e4baac",
+  "refresh": {
+    "id": "item:reference",
+    "content_changed": true,
+    "item": {
+      "id": "item:reference",
+      "title": "Reference document",
+      "kind": "document",
+      "date": "2026-01-01",
+      "summary": "Updated reference summary",
+      "source_key": "google-doc:reference",
+      "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+      "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+      "metadata": {
+        "doc_urls": [
+          "https://docs.google.com/document/d/reference/edit"
+        ],
+        "date_basis": "source",
+        "refresh_requested": false,
+        "google_sync": {
+          "file_id": "reference",
+          "title": "Reference document",
+          "created_time": "2026-01-01T00:00:00Z",
+          "modified_time": "2026-02-01T00:00:00Z",
+          "version": "2",
+          "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+          "last_checked": "2030-02-03T04:05:06+00:00"
+        }
+      },
+      "revision": 4,
+      "created": "2030-02-03T04:05:06+00:00",
+      "updated": "2030-02-03T04:05:06+00:00",
+      "period_start": null,
+      "period_end": null,
+      "source_channel": null,
+      "inbox": 1,
+      "deleted_at": null,
+      "starred": 1,
+      "date_basis": "source",
+      "authors": [],
+      "tags": [
+        {
+          "id": "tag:type:Document",
+          "name": "Document",
+          "category": "type"
+        }
+      ],
+      "is_interview_candidate": false,
+      "is_interview": false,
+      "links": [],
+      "relationships": [],
+      "participants": [],
+      "document_people": [],
+      "projects": [],
+      "series": null,
+      "blog_feed": null,
+      "source_links": [
+        {
+          "url": "https://docs.google.com/document/d/reference/edit",
+          "kind": "document",
+          "label": "Reference document",
+          "primary": true,
+          "atlas_id": "item:reference"
+        }
+      ]
+    }
+  },
+  "after": {
+    "id": "item:reference",
+    "title": "Reference document",
+    "kind": "document",
+    "date": "2026-01-01",
+    "summary": "Updated reference summary",
+    "source_key": "google-doc:reference",
+    "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+    "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+    "metadata": {
+      "doc_urls": [
+        "https://docs.google.com/document/d/reference/edit"
+      ],
+      "date_basis": "source",
+      "refresh_requested": false,
+      "google_sync": {
+        "file_id": "reference",
+        "title": "Reference document",
+        "created_time": "2026-01-01T00:00:00Z",
+        "modified_time": "2026-02-01T00:00:00Z",
+        "version": "2",
+        "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+        "last_checked": "2030-02-03T04:05:06+00:00"
+      }
+    },
+    "revision": 4,
+    "created": "2030-02-03T04:05:06+00:00",
+    "updated": "2030-02-03T04:05:06+00:00",
+    "period_start": null,
+    "period_end": null,
+    "source_channel": null,
+    "inbox": 1,
+    "deleted_at": null,
+    "starred": 1,
+    "date_basis": "source",
+    "authors": [],
+    "tags": [
+      {
+        "id": "tag:type:Document",
+        "name": "Document",
+        "category": "type"
+      }
+    ],
+    "is_interview_candidate": false,
+    "is_interview": false,
+    "links": [],
+    "relationships": [],
+    "participants": [],
+    "document_people": [],
+    "projects": [],
+    "series": null,
+    "blog_feed": null,
+    "source_links": [
+      {
+        "url": "https://docs.google.com/document/d/reference/edit",
+        "kind": "document",
+        "label": "Reference document",
+        "primary": true,
+        "atlas_id": "item:reference"
+      }
+    ]
+  },
+  "history": [
+    {
+      "id": "history:summary:4",
+      "kind": "summary",
+      "name": "summary.md",
+      "revision": 4,
+      "current": true
+    },
+    {
+      "id": "history:summary:3",
+      "kind": "summary",
+      "name": "3.md",
+      "revision": 3,
+      "current": false
+    },
+    {
+      "id": "history:original:updated",
+      "kind": "original",
+      "name": "google-refresh-<snapshot>.txt",
+      "revision": null,
+      "current": true
+    },
+    {
+      "id": "history:original:initial",
+      "kind": "original",
+      "name": "reference.txt",
+      "revision": null,
+      "current": false
+    }
+  ],
+  "history_bytes": {
+    "history:summary:4": "55706461746564207265666572656e63652073756d6d617279",
+    "history:summary:3": "5265666572656e63652073756d6d617279",
+    "history:original:updated": "4368616e676564207265666572656e636520736f757263650ae7b582",
+    "history:original:initial": "5265666572656e636520636166c3a90d0ae69db1e4baac"
+  },
+  "title_search": [
+    {
+      "id": "item:reference",
+      "title": "Reference document",
+      "kind": "document",
+      "date": "2026-01-01",
+      "source_key": "google-doc:reference",
+      "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+      "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+      "metadata": {
+        "doc_urls": [
+          "https://docs.google.com/document/d/reference/edit"
+        ],
+        "date_basis": "source",
+        "refresh_requested": false,
+        "google_sync": {
+          "file_id": "reference",
+          "title": "Reference document",
+          "created_time": "2026-01-01T00:00:00Z",
+          "modified_time": "2026-02-01T00:00:00Z",
+          "version": "2",
+          "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+          "last_checked": "2030-02-03T04:05:06+00:00"
+        }
+      },
+      "revision": 4,
+      "created": "2030-02-03T04:05:06+00:00",
+      "updated": "2030-02-03T04:05:06+00:00",
+      "period_start": null,
+      "period_end": null,
+      "source_channel": null,
+      "inbox": 1,
+      "deleted_at": null,
+      "starred": 1,
+      "date_basis": "source",
+      "authors": [],
+      "tags": [
+        {
+          "id": "tag:type:Document",
+          "name": "Document",
+          "category": "type"
+        }
+      ],
+      "is_interview_candidate": false,
+      "is_interview": false,
+      "links": [],
+      "relationships": [],
+      "participants": [],
+      "document_people": [],
+      "projects": [],
+      "series": null,
+      "blog_feed": null,
+      "source_links": [
+        {
+          "kind": "document",
+          "url": "https://docs.google.com/document/d/reference/edit",
+          "primary": true,
+          "label": "Reference document"
+        }
+      ],
+      "preview": "Updated reference summary",
+      "document_blurb": "Updated reference summary",
+      "search_title_rank": 2,
+      "search_match": "title"
+    }
+  ],
+  "content_search": [
+    {
+      "id": "item:reference",
+      "title": "Reference document",
+      "kind": "document",
+      "date": "2026-01-01",
+      "source_key": "google-doc:reference",
+      "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+      "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+      "metadata": {
+        "doc_urls": [
+          "https://docs.google.com/document/d/reference/edit"
+        ],
+        "date_basis": "source",
+        "refresh_requested": false,
+        "google_sync": {
+          "file_id": "reference",
+          "title": "Reference document",
+          "created_time": "2026-01-01T00:00:00Z",
+          "modified_time": "2026-02-01T00:00:00Z",
+          "version": "2",
+          "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+          "last_checked": "2030-02-03T04:05:06+00:00"
+        }
+      },
+      "revision": 4,
+      "created": "2030-02-03T04:05:06+00:00",
+      "updated": "2030-02-03T04:05:06+00:00",
+      "period_start": null,
+      "period_end": null,
+      "source_channel": null,
+      "inbox": 1,
+      "deleted_at": null,
+      "starred": 1,
+      "date_basis": "source",
+      "authors": [],
+      "tags": [
+        {
+          "id": "tag:type:Document",
+          "name": "Document",
+          "category": "type"
+        }
+      ],
+      "is_interview_candidate": false,
+      "is_interview": false,
+      "links": [],
+      "relationships": [],
+      "participants": [],
+      "document_people": [],
+      "projects": [],
+      "series": null,
+      "blog_feed": null,
+      "source_links": [
+        {
+          "kind": "document",
+          "url": "https://docs.google.com/document/d/reference/edit",
+          "primary": true,
+          "label": "Reference document"
+        }
+      ],
+      "preview": "Updated reference summary",
+      "document_blurb": "Updated reference summary",
+      "search_title_rank": 0,
+      "search_match": "content",
+      "search_excerpt": "Changed reference source\n終"
+    }
+  ],
+  "changes": [
+    {
+      "id": "item:reference",
+      "title": "Reference document",
+      "kind": "document",
+      "date": "2026-01-01",
+      "source_key": "google-doc:reference",
+      "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+      "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+      "metadata": {
+        "doc_urls": [
+          "https://docs.google.com/document/d/reference/edit"
+        ],
+        "date_basis": "source",
+        "refresh_requested": false,
+        "google_sync": {
+          "file_id": "reference",
+          "title": "Reference document",
+          "created_time": "2026-01-01T00:00:00Z",
+          "modified_time": "2026-02-01T00:00:00Z",
+          "version": "2",
+          "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+          "last_checked": "2030-02-03T04:05:06+00:00"
+        }
+      },
+      "revision": 4,
+      "created": "2030-02-03T04:05:06+00:00",
+      "updated": "2030-02-03T04:05:06+00:00",
+      "period_start": null,
+      "period_end": null,
+      "source_channel": null,
+      "inbox": 1,
+      "deleted_at": null,
+      "starred": 1,
+      "date_basis": "source",
+      "authors": [],
+      "tags": [
+        {
+          "id": "tag:type:Document",
+          "name": "Document",
+          "category": "type"
+        }
+      ],
+      "is_interview_candidate": false,
+      "is_interview": false,
+      "links": [],
+      "relationships": [],
+      "participants": [],
+      "document_people": [],
+      "projects": [],
+      "series": null,
+      "blog_feed": null,
+      "source_links": [
+        {
+          "kind": "document",
+          "url": "https://docs.google.com/document/d/reference/edit",
+          "primary": true,
+          "label": "Reference document"
+        }
+      ],
+      "preview": "Updated reference summary",
+      "document_blurb": "Updated reference summary",
+      "item_id": "item:reference",
+      "latest_change_id": 1,
+      "changed_at": "2030-02-03T04:05:06+00:00",
+      "update_count": 1,
+      "unseen_updates": 1
+    }
+  ],
+  "seen": [
+    {
+      "id": "item:reference",
+      "title": "Reference document",
+      "kind": "document",
+      "date": "2026-01-01",
+      "source_key": "google-doc:reference",
+      "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+      "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+      "metadata": {
+        "doc_urls": [
+          "https://docs.google.com/document/d/reference/edit"
+        ],
+        "date_basis": "source",
+        "refresh_requested": false,
+        "google_sync": {
+          "file_id": "reference",
+          "title": "Reference document",
+          "created_time": "2026-01-01T00:00:00Z",
+          "modified_time": "2026-02-01T00:00:00Z",
+          "version": "2",
+          "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+          "last_checked": "2030-02-03T04:05:06+00:00"
+        }
+      },
+      "revision": 4,
+      "created": "2030-02-03T04:05:06+00:00",
+      "updated": "2030-02-03T04:05:06+00:00",
+      "period_start": null,
+      "period_end": null,
+      "source_channel": null,
+      "inbox": 1,
+      "deleted_at": null,
+      "starred": 1,
+      "date_basis": "source",
+      "authors": [],
+      "tags": [
+        {
+          "id": "tag:type:Document",
+          "name": "Document",
+          "category": "type"
+        }
+      ],
+      "is_interview_candidate": false,
+      "is_interview": false,
+      "links": [],
+      "relationships": [],
+      "participants": [],
+      "document_people": [],
+      "projects": [],
+      "series": null,
+      "blog_feed": null,
+      "source_links": [
+        {
+          "kind": "document",
+          "url": "https://docs.google.com/document/d/reference/edit",
+          "primary": true,
+          "label": "Reference document"
+        }
+      ],
+      "preview": "Updated reference summary",
+      "document_blurb": "Updated reference summary",
+      "item_id": "item:reference",
+      "latest_change_id": 1,
+      "changed_at": "2030-02-03T04:05:06+00:00",
+      "update_count": 1,
+      "unseen_updates": 0
+    }
+  ],
+  "activity": {
+    "events": [
+      {
+        "id": 2,
+        "event_key": null,
+        "item_id": "item:reference",
+        "title": "Reference document",
+        "kind": "document",
+        "category": "Google Doc",
+        "action": "refreshed",
+        "created": "2030-02-03T04:05:06+00:00",
+        "historical": 0,
+        "deleted_at": null
+      },
+      {
+        "id": 1,
+        "event_key": "import:item:reference",
+        "item_id": "item:reference",
+        "title": "Reference document",
+        "kind": "document",
+        "category": "Google Doc",
+        "action": "imported",
+        "created": "2030-02-03T04:05:06+00:00",
+        "historical": 0,
+        "deleted_at": null
+      }
+    ],
+    "has_more": false,
+    "next_before_id": null
+  },
+  "after_restart": {
+    "id": "item:reference",
+    "title": "Reference document",
+    "kind": "document",
+    "date": "2026-01-01",
+    "summary": "Updated reference summary",
+    "source_key": "google-doc:reference",
+    "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+    "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+    "metadata": {
+      "doc_urls": [
+        "https://docs.google.com/document/d/reference/edit"
+      ],
+      "date_basis": "source",
+      "refresh_requested": false,
+      "google_sync": {
+        "file_id": "reference",
+        "title": "Reference document",
+        "created_time": "2026-01-01T00:00:00Z",
+        "modified_time": "2026-02-01T00:00:00Z",
+        "version": "2",
+        "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+        "last_checked": "2030-02-03T04:05:06+00:00"
+      }
+    },
+    "revision": 4,
+    "created": "2030-02-03T04:05:06+00:00",
+    "updated": "2030-02-03T04:05:06+00:00",
+    "period_start": null,
+    "period_end": null,
+    "source_channel": null,
+    "inbox": 1,
+    "deleted_at": null,
+    "starred": 1,
+    "date_basis": "source",
+    "authors": [],
+    "tags": [
+      {
+        "id": "tag:type:Document",
+        "name": "Document",
+        "category": "type"
+      }
+    ],
+    "is_interview_candidate": false,
+    "is_interview": false,
+    "links": [],
+    "relationships": [],
+    "participants": [],
+    "document_people": [],
+    "projects": [],
+    "series": null,
+    "blog_feed": null,
+    "source_links": [
+      {
+        "url": "https://docs.google.com/document/d/reference/edit",
+        "kind": "document",
+        "label": "Reference document",
+        "primary": true,
+        "atlas_id": "item:reference"
+      }
+    ]
+  },
+  "trash": [
+    {
+      "id": "item:reference",
+      "title": "Reference document",
+      "kind": "document",
+      "date": "2026-01-01",
+      "source_key": "google-doc:reference",
+      "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+      "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+      "metadata": {
+        "doc_urls": [
+          "https://docs.google.com/document/d/reference/edit"
+        ],
+        "date_basis": "source",
+        "refresh_requested": false,
+        "google_sync": {
+          "file_id": "reference",
+          "title": "Reference document",
+          "created_time": "2026-01-01T00:00:00Z",
+          "modified_time": "2026-02-01T00:00:00Z",
+          "version": "2",
+          "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+          "last_checked": "2030-02-03T04:05:06+00:00"
+        }
+      },
+      "revision": 5,
+      "created": "2030-02-03T04:05:06+00:00",
+      "updated": "2030-02-03T04:05:06+00:00",
+      "period_start": null,
+      "period_end": null,
+      "source_channel": null,
+      "inbox": 1,
+      "deleted_at": "2030-02-03T04:05:06+00:00",
+      "starred": 1,
+      "date_basis": "source",
+      "authors": [],
+      "tags": [],
+      "is_interview_candidate": false,
+      "is_interview": false,
+      "links": [],
+      "relationships": [],
+      "participants": [],
+      "document_people": [],
+      "projects": [],
+      "series": null,
+      "blog_feed": null,
+      "source_links": [],
+      "preview": "Updated reference summary"
+    }
+  ],
+  "restored": {
+    "id": "item:reference",
+    "title": "Reference document",
+    "kind": "document",
+    "date": "2026-01-01",
+    "summary": "Updated reference summary",
+    "source_key": "google-doc:reference",
+    "source_path": "<LIB>/items/<reference>/originals/<refresh>.txt",
+    "source_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+    "metadata": {
+      "doc_urls": [
+        "https://docs.google.com/document/d/reference/edit"
+      ],
+      "date_basis": "source",
+      "refresh_requested": false,
+      "google_sync": {
+        "file_id": "reference",
+        "title": "Reference document",
+        "created_time": "2026-01-01T00:00:00Z",
+        "modified_time": "2026-02-01T00:00:00Z",
+        "version": "2",
+        "content_hash": "7790877792b4ab2c74a1bfaaf839497799077289214f186cfda701395e345cf2",
+        "last_checked": "2030-02-03T04:05:06+00:00"
+      }
+    },
+    "revision": 6,
+    "created": "2030-02-03T04:05:06+00:00",
+    "updated": "2030-02-03T04:05:06+00:00",
+    "period_start": null,
+    "period_end": null,
+    "source_channel": null,
+    "inbox": 1,
+    "deleted_at": null,
+    "starred": 1,
+    "date_basis": "source",
+    "authors": [],
+    "tags": [
+      {
+        "id": "tag:type:Document",
+        "name": "Document",
+        "category": "type"
+      }
+    ],
+    "is_interview_candidate": false,
+    "is_interview": false,
+    "links": [],
+    "relationships": [],
+    "participants": [],
+    "document_people": [],
+    "projects": [],
+    "series": null,
+    "blog_feed": null,
+    "source_links": [
+      {
+        "url": "https://docs.google.com/document/d/reference/edit",
+        "kind": "document",
+        "label": "Reference document",
+        "primary": true,
+        "atlas_id": "item:reference"
+      }
+    ]
+  }
+}

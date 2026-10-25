@@ -1,0 +1,1026 @@
+[
+  {
+    "name": "list_ownership_lookups",
+    "description": "Select at most three due Google documents missing owners, respecting persistent per-document and connector backoff. Local selection only.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "record_ownership_lookup",
+    "description": "Record an owner metadata attempt and link verified Google owners without refreshing content. Supply source with observed file_id, mime_type, trashed if returned, source_visibility_status and observed owners/permissions, or error. Respect stop_owner_pass and notify.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer"
+        },
+        "source": {
+          "type": "object"
+        },
+        "error": {
+          "type": "string"
+        },
+        "provider_unavailable": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_id",
+        "expected_revision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "link_document_people",
+    "description": "Link verified owners, creators and mentioned people separately from authors. Never infer an owner or restore removed People. For role=mentioned require observed email plus person_chip={personId,personProperties:{name,email}} from get_document, or person_link set to an explicit single-address mailto URL. Plain text names are not identity evidence; do not infer unknown names or emails.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "people": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "ownership_status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "unavailable",
+            "no_individual_owner"
+          ]
+        },
+        "replace_roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "item_id",
+        "people"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "link_meeting_people",
+    "description": "Create/reuse confirmed work contacts and link a non-interview meeting; preserve its summary, full source, authors and date. Full names require explicit identity evidence.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "expected_revision": {
+          "type": "integer"
+        },
+        "calendar_source": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "item_id",
+        "participants"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "submit_sources",
+    "description": "Hand complete discovered source lists to Atlas; Atlas filters, deduplicates and respects tombstones. Return only pending sources for processing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "required": [
+        "sources"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_intake",
+    "description": "List new sources Atlas has selected; schedulers must not independently deduplicate.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "source_type": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_intake",
+    "description": "Read a queued source and its complete preserved transcript.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "intake_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "intake_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "complete_intake",
+    "description": "Commit only an Atlas-selected new source with its prepared summary; recheck tombstones and identity under the library lock. For role=mentioned require observed email plus person_chip={personId,personProperties:{name,email}} from get_document, or person_link set to an explicit single-address mailto URL. Plain text names are not identity evidence; do not infer unknown names or emails.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "intake_id": {
+          "type": "string"
+        },
+        "payload": {
+          "type": "object"
+        },
+        "source": {
+          "type": "object"
+        },
+        "expected_source_hash": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "intake_id",
+        "payload"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_activity",
+    "description": "List successful library additions and content changes, newest first. No scheduled-check or duplicate-import noise.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer"
+        },
+        "before_id": {
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_google_documents",
+    "description": "List compact Google document references. dirty returns only user-requested refreshes. recent returns requested documents plus documents with recent Google dates or supplied recent_file_ids. Match metadata-only Drive search IDs here; never download unchanged old documents.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "all",
+            "dirty",
+            "recent"
+          ]
+        },
+        "recent_file_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_refresh_requested",
+    "description": "Flag a Google document for the next hourly refresh, or cancel the request.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "requested": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_id",
+        "requested"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "check_document_source",
+    "description": "Compare Google metadata with the last successful refresh. Returns needs_content; unchanged documents do not need fetching. Does not acknowledge a changed version until refresh succeeds.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "file_id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "created_time": {
+              "type": "string"
+            },
+            "modified_time": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "owners": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "creator": {
+              "type": "object"
+            },
+            "created_by": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "file_id",
+            "title",
+            "created_time",
+            "modified_time"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "item_id",
+        "expected_revision",
+        "source"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "inspect_document_content",
+    "description": "Hash complete fetched text and compare with the cached source. Only changed text needs resummarization.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "original_text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "original_text"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "refresh_document",
+    "description": "Commit complete source and Google metadata after verification; changed text requires a refreshed summary. Preserve stars, tags, authors, dates and historical sources. Clear refresh flag only on success. Do not use import_item to refresh.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "file_id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "created_time": {
+              "type": "string"
+            },
+            "modified_time": {
+              "type": "string"
+            },
+            "version": {
+              "type": "string"
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "owners": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "creator": {
+              "type": "object"
+            },
+            "created_by": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "file_id",
+            "title",
+            "created_time",
+            "modified_time"
+          ],
+          "additionalProperties": false
+        },
+        "original_text": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id",
+        "expected_revision",
+        "source",
+        "original_text"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_date",
+    "description": "Edit the visible item date used for date sorting; preserve its original added timestamp.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "item_id",
+        "date",
+        "expected_revision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_person",
+    "description": "Read a person’s authored documents and linked interviews.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "link_interview",
+    "description": "Create or reuse candidate profiles and link an existing interview without changing its summary or authors.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "item_id",
+        "candidates"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_authors",
+    "description": "Set explicitly confirmed authors; people mentioned and reviewers are not authors.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "item_id",
+        "authors"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_starred",
+    "description": "Star or unstar an item. Stars keep items at the top of lists.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "starred": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_id",
+        "starred"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_project",
+    "description": "Read a project’s Documents, Meetings, Updates, and other related notes, using project tags.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_blog_feeds",
+    "description": "List blog topics, including AI.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_blog_feed",
+    "description": "Read the latest blog roundup and its newest-first dated history.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "feed_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "feed_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "set_reviewed",
+    "description": "Mark a note reviewed to remove it from Inbox, or unreviewed to put it back. Other views and tags are preserved.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "reviewed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_id",
+        "reviewed"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "preview_delete_item",
+    "description": "Review a note deletion and the other notes whose links will be cleaned.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "delete_item",
+    "description": "Move a note to recoverable Trash and replace inbound internal links with plain text.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "item_id",
+        "expected_revision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_trash",
+    "description": "List recoverable deleted notes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "restore_item",
+    "description": "Restore a deleted note; restore links only in notes not edited since cleanup.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_meeting_series",
+    "description": "List recurring meeting series.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_meeting_series",
+    "description": "Read a series, its newest session, and dated history.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "series_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "series_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "assign_meeting_series",
+    "description": "Group a meeting into a named series; omit title to ungroup.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "cadence": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "search_items",
+    "description": "Search summaries and preserved source text. Filters combine with AND.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "tag_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "kind": {
+          "type": "string"
+        },
+        "series_id": {
+          "type": "string"
+        },
+        "blog_feed_id": {
+          "type": "string"
+        },
+        "starred_only": {
+          "type": "boolean"
+        },
+        "sort_by": {
+          "type": "string",
+          "enum": [
+            "title",
+            "date"
+          ]
+        },
+        "collection": {
+          "type": "string",
+          "enum": [
+            "people",
+            "interviews",
+            "meetings"
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_item",
+    "description": "Read an item, its revision, tags, and source references.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_entity",
+    "description": "Read a person, team or project entity and its connected records.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "entity_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "entity_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_team",
+    "description": "Read a team profile and its members, documents and meetings.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_entities",
+    "description": "List People, Teams and Projects separately from topic tags.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "create_entity",
+    "description": "Create or reuse a person, team or project record; never restore Trash automatically.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "person",
+            "team",
+            "project"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "link_entity",
+    "description": "Connect records without asserting authorship or attendance.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "remove": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_ids",
+        "entity_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "list_tags",
+    "description": "List existing tags. Prefer these over creating synonymous tags.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "import_item",
+    "description": "Preserve original text and create a searchable Markdown item. Set explicit=true only for a direct human request to re-add; this restores matching Trash records. Automatic jobs must use submit_sources/complete_intake and never set explicit. For interviews supply candidates=[canonical candidate names] to create/reuse candidate profiles under Interviews and link the session with an Interview tag; candidates are not authors. For a document use kind=document and projects=[project names]; it appears in Documents and every named project without copying. Supply doc_urls for Google Doc source identity and authors=[confirmed author names]. Supply document_people with verified owner, creator or mentioned roles and evidence; Google ownership must come from observed owner metadata. Omit date if unknown; documents display their Atlas added date. For a blog roundup use kind=blog, blog_feed=AI, and an edition date. Updates require start and exclusive end dates. For role=mentioned require observed email plus person_chip={personId,personProperties:{name,email}} from get_document, or person_link set to an explicit single-address mailto URL. Plain text names are not identity evidence; do not infer unknown names or emails.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "explicit": {
+          "type": "boolean"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "original_text": {
+          "type": "string"
+        },
+        "original_name": {
+          "type": "string"
+        },
+        "source_key": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "category"
+            ]
+          }
+        },
+        "period_start": {
+          "type": "string"
+        },
+        "period_end": {
+          "type": "string"
+        },
+        "source_channel": {
+          "type": "string"
+        },
+        "document_people": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "calendar_source": {
+          "type": "object"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "authors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blog_feed": {
+          "type": "string"
+        },
+        "series_title": {
+          "type": "string"
+        },
+        "series_cadence": {
+          "type": "string"
+        },
+        "calendar_url": {
+          "type": "string"
+        },
+        "doc_urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "title",
+        "summary",
+        "original_text",
+        "source_key"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "update_summary",
+    "description": "Update Markdown using the revision from get_item. Manual tags are preserved.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "expected_revision": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "item_id",
+        "summary",
+        "expected_revision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "apply_tag",
+    "description": "Apply or remove an existing tag from items.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "tag_id": {
+          "type": "string"
+        },
+        "remove": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "item_ids",
+        "tag_id"
+      ],
+      "additionalProperties": false
+    }
+  }
+]

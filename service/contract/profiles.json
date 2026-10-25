@@ -1,0 +1,31 @@
+{
+  "gate3": {
+    "scope": "Gate 3 core records, reading/search, edits/tags/undo, history, basic Activity, transport and restart. Refresh, relationships workflows, backup and full recovery remain later requirements.",
+    "test_ids": [
+      "test_core.CoreTests.test_record_kinds_manual_import_and_lightweight_listing",
+      "test_core.CoreTests.test_full_source_cross_surface_and_restart",
+      "test_core.CoreTests.test_edits_stale_revisions_dates_stars_tags_and_undo",
+      "test_core.CoreTests.test_google_identity_normalization_and_duplicate_quiet",
+      "test_core.CoreTests.test_search_modes_ranking_prefixes_phrases_filters_and_unicode",
+      "test_core.CoreTests.test_serial_revision_race_one_winner",
+      "test_search_rules.SearchContracts.test_multiple_tag_filters_combine_with_query_kind_and_star_using_AND",
+      "test_search_rules.SearchContracts.test_stars_dates_and_title_order_are_preserved_within_same_title_match_tier",
+      "test_preservation.PreservationContracts.test_external_summary_reconciliation_indexes_change_through_endpoints",
+      "test_preservation.PreservationContracts.test_second_process_cannot_replace_connection_or_touch_existing_records",
+      "test_preservation.PreservationContracts.test_committed_write_survives_abrupt_process_exit_and_retry_is_duplicate",
+      "test_preservation.PreservationContracts.test_referenced_documents_and_calendars_keep_labels_dates_and_cached_identity",
+      "test_preservation.PreservationContracts.test_history_rejects_parent_directory_symlink_escape_and_recovers",
+      "test_core_history.CoreHistoryContracts.test_summary_revisions_original_bytes_and_history_errors_survive_restart",
+      "test_transport.ComparisonTests.test_meaningful_mutations_are_detected",
+      "test_transport.TransportTests.test_auth_host_origin_cookie_and_url_token_scope",
+      "test_transport.TransportTests.test_static_headers_and_method_errors",
+      "test_transport.TransportTests.test_mcp_protocol_catalog_schema_and_errors",
+      "test_transport.TransportTests.test_rejected_requests_leave_service_usable",
+      "test_json_fidelity.JSONFidelityContracts.test_literal_unicode_escapes_separators_large_integers_and_zero_flags_roundtrip",
+      "test_argument_boundaries.ArgumentBoundaryContracts.test_unknown_mutation_arguments_reject_before_changes_and_legacy_wrappers_ignore",
+      "test_core_compatibility.CoreDateContracts.test_invalid_calendar_forms_never_mutate_records_or_activity",
+      "test_core_compatibility.CoreDateContracts.test_calendar_reference_never_invents_year_zero",
+      "test_core_compatibility.CoreIdentityContracts.test_encoded_google_paths_never_merge_with_decoded_ids"
+    ]
+  }
+}

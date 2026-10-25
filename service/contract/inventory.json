@@ -1,0 +1,669 @@
+{
+  "source": "app/server.py",
+  "status": "Static starting checklist; route prefixes require an ID. Success/error/parameter schemas and actual response fixtures are Gate 0/1 work. Includes string branches, not a formal OpenAPI definition.",
+  "mcp_tools": [
+    {
+      "name": "list_ownership_lookups",
+      "properties": [
+        "limit"
+      ],
+      "required": [],
+      "source_line": 17
+    },
+    {
+      "name": "record_ownership_lookup",
+      "properties": [
+        "item_id",
+        "expected_revision",
+        "source",
+        "error",
+        "provider_unavailable"
+      ],
+      "required": [
+        "item_id",
+        "expected_revision"
+      ],
+      "source_line": 18
+    },
+    {
+      "name": "link_document_people",
+      "properties": [
+        "item_id",
+        "people",
+        "ownership_status",
+        "replace_roles"
+      ],
+      "required": [
+        "item_id",
+        "people"
+      ],
+      "source_line": 19
+    },
+    {
+      "name": "link_meeting_people",
+      "properties": [
+        "item_id",
+        "participants",
+        "expected_revision",
+        "calendar_source"
+      ],
+      "required": [
+        "item_id",
+        "participants"
+      ],
+      "source_line": 20
+    },
+    {
+      "name": "submit_sources",
+      "properties": [
+        "sources"
+      ],
+      "required": [
+        "sources"
+      ],
+      "source_line": 21
+    },
+    {
+      "name": "list_intake",
+      "properties": [
+        "source_type",
+        "limit"
+      ],
+      "required": [],
+      "source_line": 22
+    },
+    {
+      "name": "get_intake",
+      "properties": [
+        "intake_id"
+      ],
+      "required": [
+        "intake_id"
+      ],
+      "source_line": 23
+    },
+    {
+      "name": "complete_intake",
+      "properties": [
+        "intake_id",
+        "payload",
+        "source",
+        "expected_source_hash"
+      ],
+      "required": [
+        "intake_id",
+        "payload"
+      ],
+      "source_line": 24
+    },
+    {
+      "name": "list_activity",
+      "properties": [
+        "limit",
+        "before_id"
+      ],
+      "required": [],
+      "source_line": 25
+    },
+    {
+      "name": "list_google_documents",
+      "properties": [
+        "mode",
+        "recent_file_ids"
+      ],
+      "required": [],
+      "source_line": 26
+    },
+    {
+      "name": "set_refresh_requested",
+      "properties": [
+        "item_id",
+        "requested"
+      ],
+      "required": [
+        "item_id",
+        "requested"
+      ],
+      "source_line": 27
+    },
+    {
+      "name": "check_document_source",
+      "properties": [
+        "item_id",
+        "expected_revision",
+        "source"
+      ],
+      "required": [
+        "item_id",
+        "expected_revision",
+        "source"
+      ],
+      "source_line": 28
+    },
+    {
+      "name": "inspect_document_content",
+      "properties": [
+        "item_id",
+        "original_text"
+      ],
+      "required": [
+        "item_id",
+        "original_text"
+      ],
+      "source_line": 29
+    },
+    {
+      "name": "refresh_document",
+      "properties": [
+        "item_id",
+        "expected_revision",
+        "source",
+        "original_text",
+        "summary"
+      ],
+      "required": [
+        "item_id",
+        "expected_revision",
+        "source",
+        "original_text"
+      ],
+      "source_line": 30
+    },
+    {
+      "name": "set_date",
+      "properties": [
+        "item_id",
+        "date",
+        "expected_revision"
+      ],
+      "required": [
+        "item_id",
+        "date",
+        "expected_revision"
+      ],
+      "source_line": 32
+    },
+    {
+      "name": "get_person",
+      "properties": [
+        "item_id"
+      ],
+      "required": [
+        "item_id"
+      ],
+      "source_line": 33
+    },
+    {
+      "name": "link_interview",
+      "properties": [
+        "item_id",
+        "candidates"
+      ],
+      "required": [
+        "item_id",
+        "candidates"
+      ],
+      "source_line": 34
+    },
+    {
+      "name": "set_authors",
+      "properties": [
+        "item_id",
+        "authors"
+      ],
+      "required": [
+        "item_id",
+        "authors"
+      ],
+      "source_line": 35
+    },
+    {
+      "name": "set_starred",
+      "properties": [
+        "item_id",
+        "starred"
+      ],
+      "required": [
+        "item_id",
+        "starred"
+      ],
+      "source_line": 36
+    },
+    {
+      "name": "get_project",
+      "properties": [
+        "item_id"
+      ],
+      "required": [
+        "item_id"
+      ],
+      "source_line": 37
+    },
+    {
+      "name": "list_blog_feeds",
+      "properties": [],
+      "required": [],
+      "source_line": 38
+    },
+    {
+      "name": "get_blog_feed",
+      "properties": [
+        "feed_id"
+      ],
+      "required": [
+        "feed_id"
+      ],
+      "source_line": 39
+    },
+    {
+      "name": "set_reviewed",
+      "properties": [
+        "item_id",
+        "reviewed"
+      ],
+      "required": [
+        "item_id",
+        "reviewed"
+      ],
+      "source_line": 40
+    },
+    {
+      "name": "preview_delete_item",
+      "properties": [
+        "item_id"
+      ],
+      "required": [
+        "item_id"
+      ],
+      "source_line": 41
+    },
+    {
+      "name": "delete_item",
+      "properties": [
+        "item_id",
+        "expected_revision"
+      ],
+      "required": [
+        "item_id",
+        "expected_revision"
+      ],
+      "source_line": 42
+    },
+    {
+      "name": "list_trash",
+      "properties": [
+        "query"
+      ],
+      "required": [],
+      "source_line": 43
+    },
+    {
+      "name": "restore_item",
+      "properties": [
+        "item_id"
+      ],
+      "required": [
+        "item_id"
+      ],
+      "source_line": 44
+    },
+    {
+      "name": "list_meeting_series",
+      "properties": [],
+      "required": [],
+      "source_line": 45
+    },
+    {
+      "name": "get_meeting_series",
+      "properties": [
+        "series_id"
+      ],
+      "required": [
+        "series_id"
+      ],
+      "source_line": 46
+    },
+    {
+      "name": "assign_meeting_series",
+      "properties": [
+        "item_id",
+        "title",
+        "cadence"
+      ],
+      "required": [
+        "item_id"
+      ],
+      "source_line": 47
+    },
+    {
+      "name": "search_items",
+      "properties": [
+        "query",
+        "tag_ids",
+        "kind",
+        "series_id",
+        "blog_feed_id",
+        "starred_only",
+        "sort_by",
+        "collection"
+      ],
+      "required": [],
+      "source_line": 48
+    },
+    {
+      "name": "get_item",
+      "properties": [
+        "item_id"
+      ],
+      "required": [
+        "item_id"
+      ],
+      "source_line": 49
+    },
+    {
+      "name": "get_entity",
+      "properties": [
+        "entity_id"
+      ],
+      "required": [
+        "entity_id"
+      ],
+      "source_line": 50
+    },
+    {
+      "name": "get_team",
+      "properties": [
+        "item_id"
+      ],
+      "required": [
+        "item_id"
+      ],
+      "source_line": 51
+    },
+    {
+      "name": "list_entities",
+      "properties": [],
+      "required": [],
+      "source_line": 52
+    },
+    {
+      "name": "create_entity",
+      "properties": [
+        "name",
+        "kind"
+      ],
+      "required": [
+        "name",
+        "kind"
+      ],
+      "source_line": 53
+    },
+    {
+      "name": "link_entity",
+      "properties": [
+        "item_ids",
+        "entity_id",
+        "remove"
+      ],
+      "required": [
+        "item_ids",
+        "entity_id"
+      ],
+      "source_line": 54
+    },
+    {
+      "name": "list_tags",
+      "properties": [],
+      "required": [],
+      "source_line": 55
+    },
+    {
+      "name": "import_item",
+      "properties": [
+        "explicit",
+        "title",
+        "summary",
+        "kind",
+        "date",
+        "original_text",
+        "original_name",
+        "source_key",
+        "tags",
+        "period_start",
+        "period_end",
+        "source_channel",
+        "document_people",
+        "participants",
+        "calendar_source",
+        "candidates",
+        "authors",
+        "projects",
+        "blog_feed",
+        "series_title",
+        "series_cadence",
+        "calendar_url",
+        "doc_urls"
+      ],
+      "required": [
+        "title",
+        "summary",
+        "original_text",
+        "source_key"
+      ],
+      "source_line": 56
+    },
+    {
+      "name": "update_summary",
+      "properties": [
+        "item_id",
+        "summary",
+        "expected_revision"
+      ],
+      "required": [
+        "item_id",
+        "summary",
+        "expected_revision"
+      ],
+      "source_line": 62
+    },
+    {
+      "name": "apply_tag",
+      "properties": [
+        "item_ids",
+        "tag_id",
+        "remove"
+      ],
+      "required": [
+        "item_ids",
+        "tag_id"
+      ],
+      "source_line": 63
+    }
+  ],
+  "http_route_branches": [
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/activity"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/attachment/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/blogs"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/blogs/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/changed-documents"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/changes"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/delete-preview/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/entities"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/entity/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/info"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/item/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/items"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/person/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/project/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/series"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/series/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/source/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/tags"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/team/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/trash"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/api/trash/"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/app.js"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/health"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/mcp"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/style.css"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/apply"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/authors"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/backup"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/changes-seen"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/date"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/delete"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/entity"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/import"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/link-entity"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/refresh-request"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/restore"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/reviewed"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/series"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/starred"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/summary"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/tag"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/undo"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/mcp"
+    },
+    {
+      "method": "GET",
+      "path_or_prefix": "/"
+    }
+  ],
+  "additional_compatibility_dispatch": [
+    "import_obsidian (not advertised in TOOLS)"
+  ],
+  "cross_cutting": [
+    "HTTP authentication, cookies, Host/Origin, content limits, error envelopes",
+    "MCP initialize/ping/notifications/tools/list/tools/call",
+    "method handling and stateless session behavior"
+  ]
+}

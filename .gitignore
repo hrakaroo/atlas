@@ -1,0 +1,88 @@
+# Private runtime library and data
+/library/
+/.service/
+/backups/
+/imports/
+
+# Generated output and scratch work
+/build/
+/dist/
+/work/
+/tmp/
+/temp/
+*.app/
+*.dmg
+*.pkg
+
+# SQLite databases and sidecars; schema SQL remains trackable
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-*
+*.sqlite3-*
+*.db-*
+
+# Runtime, test and environment caches
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+node_modules/
+
+# Local settings, secrets and signing keys
+/.codex/
+/.vscode/
+/.idea/
+.env
+.env.*
+!.env.example
+*.local
+*.local.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.mobileprovision
+credentials*.json
+client_secret*.json
+token.json
+tokens.json
+connection.json
+config.toml.before-atlas-http
+config.toml.atlas-tmp
+
+# Temporary files and macOS metadata
+.DS_Store
+._*
+.Spotlight-V100/
+.Trashes/
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.rej
+
+# Go migration generated binaries, disposable libraries and reports
+/service/.work/
+/service/bin/
+/service/coverage.out
+/service/*.test
+
+# Retired Python implementation, reference tests and local rollback packaging
+/old/
+
+# Local scheduled-task inventory and machine-specific paths
+/schedules/manifest.json
+
+# Private daily briefing instructions and internal source channels
+/schedules/daily-ai-briefing.md
