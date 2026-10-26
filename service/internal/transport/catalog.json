@@ -205,7 +205,7 @@
   },
   {
     "name": "list_google_documents",
-    "description": "List compact Google document references. dirty returns only user-requested refreshes. recent returns requested documents plus documents with recent Google dates or supplied recent_file_ids. Match metadata-only Drive search IDs here; never download unchanged old documents.",
+    "description": "List compact Google document references. due selects adaptive checks and all refresh requests; manual-only sources are skipped unless requested. all, dirty and recent remain compatibility inventory modes. Never use a Drive-wide search to bypass due selection.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -214,7 +214,8 @@
           "enum": [
             "all",
             "dirty",
-            "recent"
+            "recent",
+            "due"
           ]
         },
         "recent_file_ids": {
@@ -556,6 +557,133 @@
     }
   },
   {
+    "name": "configure_feed",
+    "description": "Create/configure a reusable feed. Flow append adds separate entries; in_place revises stable entries. Presentation entries shows dated editions; overview combines entries with a clickable index. Existing populated feeds cannot change flow.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "flow": {
+          "type": "string",
+          "enum": [
+            "append",
+            "in_place"
+          ]
+        },
+        "presentation": {
+          "type": "string",
+          "enum": [
+            "entries",
+            "overview"
+          ]
+        },
+        "entry_label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "flow",
+        "presentation"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "upsert_feed_entry",
+    "description": "Submit a source-grounded feed entry. Atlas owns duplicates, tombstones, expected revisions, history and unread events. Use expected_revision=0 for a new entry. In-place updates require the current item revision. fields may contain external_id, severity (integer or null), status (active/stable/resolved/unknown), incident_url and channel_url. Preserve user context. Append duplicates are skipped. source_context preserves source channel and coverage window separately from meaningful fields; observation bookkeeping does not create unread events.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "feed_id": {
+          "type": "string"
+        },
+        "entry_key": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "original_text": {
+          "type": "string"
+        },
+        "original_name": {
+          "type": "string"
+        },
+        "source_url": {
+          "type": "string"
+        },
+        "observed_at": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "object"
+        },
+        "expected_revision": {
+          "type": "integer"
+        },
+        "source_context": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "feed_id",
+        "entry_key",
+        "title",
+        "summary",
+        "original_text",
+        "source_url",
+        "observed_at",
+        "expected_revision"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "record_feed_check",
+    "description": "Record a completed source check for a feed, including a quiet empty check. Does not create Activity/unread events or acknowledge feed attention. Call only after complete, successful reads/writes; failures leave the previous checked_at.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "feed_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "feed_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "mark_feed_seen",
+    "description": "Acknowledge feed arrivals through the displayed latest_entry_id. Reading/listing feeds does not mark them read; newer arrivals remain unread.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "feed_id": {
+          "type": "string"
+        },
+        "through_id": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "feed_id",
+        "through_id"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "set_reviewed",
     "description": "Mark a note reviewed to remove it from Inbox, or unreviewed to put it back. Other views and tags are preserved.",
     "inputSchema": {
@@ -720,7 +848,8 @@
           "type": "string",
           "enum": [
             "title",
-            "date"
+            "date",
+            "updates"
           ]
         },
         "collection": {

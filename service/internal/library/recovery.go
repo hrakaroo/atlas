@@ -55,7 +55,7 @@ func (l *Library) recoverPendingRefresh(id string) (err error) {
 	next, nextOK := intent["new_summary"].(string)
 	version, versionOK := intent["version"].(float64)
 	if !versionOK || version != 1 || !oldOK || !nextOK ||
-		filepath.Base(name) != name || !strings.HasPrefix(name, "google-refresh-") || !strings.HasSuffix(name, ".txt") {
+		filepath.Base(name) != name || (!strings.HasPrefix(name, "google-refresh-") && !strings.HasPrefix(name, "feed-update-")) || !strings.HasSuffix(name, ".txt") {
 		return errors.New("Invalid pending refresh intent; review required")
 	}
 	snapshot := filepath.Join(folder, "originals", name)

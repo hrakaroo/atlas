@@ -352,7 +352,7 @@ class RefreshContracts(WorkflowCase):
         self.refresh(ident, 'Version three', summary='Summary three')
         self.post('/api/changes-seen', {'item_id':ident,'through_id':first['latest_change_id']})
         rows = self.get('/api/changed-documents')
-        self.assertEqual([(r['id'],r['update_count'],r['unseen_updates']) for r in rows], [(ident,2,1)])
+        self.assertEqual([(r['id'],r['update_count'],r['unseen_updates']) for r in rows], [(ident,3,1)])
         self.post('/api/changes-seen', {'item_id':ident,'through_id':rows[0]['latest_change_id']})
         self.post('/api/changes-seen', {'item_id':ident,'through_id':first['latest_change_id']})
         self.restart()

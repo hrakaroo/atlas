@@ -1,4 +1,4 @@
-"""Export Atlas schedule definitions for version control; never registers jobs."""
+"""Export Atlas schedule definitions locally; never registers jobs."""
 import argparse
 import json
 import os
@@ -12,6 +12,15 @@ CADENCES = {
     "atlas-zoom-transcript-import": "Every hour, minute 10",
     "daily-ai-briefing": "Daily at 6:00 a.m. America/Los_Angeles",
 }
+def describe_cadence(rrule):
+    parts = dict(part.split("=", 1) for part in rrule.removeprefix("RRULE:").split(";") if "=" in part)
+    interval = int(parts.get("INTERVAL", "1"))
+    if parts.get("FREQ") == "HOURLY" and interval == 1 and "BYMINUTE" in parts:
+        return "Every hour, minute " + parts["BYMINUTE"].zfill(2)
+    if parts.get("FREQ") == "DAILY" and interval == 1 and "BYHOUR" in parts:
+        return "Daily at " + parts["BYHOUR"].zfill(2) + ":" + parts.get("BYMINUTE", "0").zfill(2) + " America/Los_Angeles"
+    return rrule
+
 def read_definition(path):
     # Scheduler files use flat TOML with JSON-compatible quoted strings.
     # Parse only the fields we export. Fail on unsupported encodings rather
@@ -35,7 +44,7 @@ def export(source, destination, atlas_root, home):
     records = []
     for path in sorted(source.glob("*/automation.toml")):
         record = read_definition(path)
-        if record["id"] not in CADENCES:
+        if record["id"] not in CADENCES and not record["id"].startswith("atlas-"):
             continue
         ident = record["id"]
         prompt = record.pop("prompt")
@@ -45,7 +54,7 @@ def export(source, destination, atlas_root, home):
         (destination / prompt_file).write_text(prompt + "\n")
         # Chat IDs are local bindings, not portable definitions.
         record.pop("target_thread_id", None)
-        record.update(prompt_file=prompt_file, cadence=CADENCES[ident],
+        record.update(prompt_file=prompt_file, cadence=CADENCES.get(ident, describe_cadence(record["rrule"])),
                       timezone="America/Los_Angeles",
                       destination_chat="Daily AI briefing" if ident=="daily-ai-briefing" else "Atlas scheduled checks")
         records.append(record)

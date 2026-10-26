@@ -88,6 +88,14 @@ func (l *Library) activityEvent(item Record, action, created string, eventKey an
 	if err := l.exec("INSERT OR IGNORE INTO activity_events(event_key,item_id,title,kind,category,action,created,historical) VALUES(?,?,?,?,?,?,?,?)", eventKey, item["id"], item["title"], kind, category, action, created, boolInt(historical)); err != nil {
 		return err
 	}
+	if kind == "blog" && action == "imported" {
+		if err := l.exec("INSERT OR IGNORE INTO feed_arrivals(item_id,feed_id) SELECT item_id,feed_id FROM blog_members WHERE item_id=?", item["id"]); err != nil {
+			return err
+		}
+		if err := l.syncFeedArrivals(); err != nil {
+			return err
+		}
+	}
 	if kind == "document" || kind == "reference" {
 		sync := mapping(mapping(item["metadata"])["google_sync"])
 		digest := sync["content_hash"]
@@ -105,7 +113,7 @@ func (l *Library) activityEvent(item Record, action, created string, eventKey an
 		if err != nil {
 			return err
 		}
-		if (action == "refreshed" || action == "updated") && previous != nil && truth(previous["content_hash"]) && truth(digest) && previous["content_hash"] != digest && truth(item["starred"]) && !truth(item["deleted_at"]) {
+		if (action == "refreshed" || action == "updated") && previous != nil && truth(previous["content_hash"]) && truth(digest) && previous["content_hash"] != digest && !truth(item["deleted_at"]) {
 			if err = l.exec("INSERT INTO document_changes(item_id,content_hash,detected_at,source_modified_at) VALUES(?,?,?,?)", item["id"], digest, created, sync["modified_time"]); err != nil {
 				return err
 			}
@@ -210,6 +218,26 @@ func (l *Library) Activity(limit int64, before any) (Record, error) {
 	}
 	return Record{"events": events, "has_more": hasMore, "next_before_id": next}, nil
 }
+func (l *Library) annotateDocumentChanges(items []Record) error {
+	changes, err := l.rows("SELECT c.item_id,max(c.id) AS latest_change_id,max(c.detected_at) AS changed_at,count(*) AS update_count,sum(CASE WHEN c.id>COALESCE(s.through_id,0) THEN 1 ELSE 0 END) AS unseen_updates FROM document_changes c LEFT JOIN document_changes_seen s ON s.item_id=c.item_id GROUP BY c.item_id")
+	if err != nil {
+		return err
+	}
+	byID := map[string]Record{}
+	for _, row := range changes {
+		byID[str(row, "item_id")] = row
+	}
+	for _, item := range items {
+		item["latest_change_id"] = int64(0)
+		item["unseen_updates"] = int64(0)
+		if change, ok := byID[str(item, "id")]; ok {
+			for k, v := range change {
+				item[k] = v
+			}
+		}
+	}
+	return nil
+}
 func (l *Library) ChangedDocuments(args Record) ([]Record, error) {
 	argsCopy := Record{}
 	for k, v := range args {
@@ -225,20 +253,12 @@ func (l *Library) ChangedDocuments(args Record) ([]Record, error) {
 	if err != nil {
 		return nil, err
 	}
-	changes, err := l.rows("SELECT c.item_id,max(c.id) AS latest_change_id,max(c.detected_at) AS changed_at,count(*) AS update_count,sum(CASE WHEN c.id>COALESCE(s.through_id,0) THEN 1 ELSE 0 END) AS unseen_updates FROM document_changes c LEFT JOIN document_changes_seen s ON s.item_id=c.item_id GROUP BY c.item_id")
-	if err != nil {
+	if err = l.annotateDocumentChanges(items); err != nil {
 		return nil, err
-	}
-	byID := map[string]Record{}
-	for _, row := range changes {
-		byID[str(row, "item_id")] = row
 	}
 	result := []Record{}
 	for _, item := range items {
-		if change, ok := byID[str(item, "id")]; ok {
-			for k, v := range change {
-				item[k] = v
-			}
+		if number(item["latest_change_id"]) > 0 {
 			result = append(result, item)
 		}
 	}

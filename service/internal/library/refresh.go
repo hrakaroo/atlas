@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -124,8 +125,8 @@ func (l *Library) googleDocument(id string) (Record, string, string, error) {
 	panic("unreachable")
 }
 func (l *Library) ListGoogleDocuments(mode string, recentFileIDs []string) ([]Record, error) {
-	if mode != "all" && mode != "dirty" && mode != "recent" {
-		return nil, errors.New("Choose all, dirty, or recent.")
+	if mode != "all" && mode != "dirty" && mode != "recent" && mode != "due" {
+		return nil, errors.New("Choose all, dirty, recent, or due.")
 	}
 	cutoff := l.Now().UTC().Add(-30 * 24 * time.Hour)
 	allowed := map[string]bool{}
@@ -165,7 +166,26 @@ func (l *Library) ListGoogleDocuments(mode string, recentFileIDs []string) ([]Re
 		if mode == "recent" && !dirty && !recent {
 			continue
 		}
-		result = append(result, Record{"id": item["id"], "title": item["title"], "file_id": fileID, "url": url, "revision": item["revision"], "refresh_requested": dirty, "google_sync": sync})
+		record := Record{"id": item["id"], "title": item["title"], "file_id": fileID, "url": url, "revision": item["revision"], "refresh_requested": dirty, "google_sync": sync}
+		if mode == "due" {
+			monitoring, e := l.documentMonitoring(item)
+			if e != nil {
+				return nil, e
+			}
+			if !dirty && !truth(monitoring["due"]) {
+				continue
+			}
+			record["monitoring"] = monitoring
+		}
+		result = append(result, record)
+	}
+	if mode == "due" {
+		sort.SliceStable(result, func(i, j int) bool {
+			if truth(result[i]["refresh_requested"]) != truth(result[j]["refresh_requested"]) {
+				return truth(result[i]["refresh_requested"])
+			}
+			return str(mapping(result[i]["monitoring"]), "next_check_at") < str(mapping(result[j]["monitoring"]), "next_check_at")
+		})
 	}
 	return result, nil
 }
@@ -249,7 +269,12 @@ func (l *Library) CheckDocumentSource(id string, revision int64, source Record) 
 	}
 	sync["last_checked"] = l.now()
 	metadata["google_sync"] = sync
-	if err = l.transaction(func() error { return l.exec("UPDATE items SET metadata=? WHERE id=?", jsonText(metadata), id) }); err != nil {
+	if err = l.transaction(func() error {
+		if e := l.exec("UPDATE items SET metadata=? WHERE id=?", jsonText(metadata), id); e != nil {
+			return e
+		}
+		return l.recordDocumentCheck(item, source, false)
+	}); err != nil {
 		return nil, err
 	}
 	return Record{"id": id, "revision": item["revision"], "needs_content": false}, nil
@@ -375,6 +400,9 @@ func (l *Library) RefreshDocument(id string, revision int64, source Record, text
 	}
 	err = l.transaction(func() error {
 		if e := l.exec("UPDATE items SET title=?,summary=?,source_path=?,source_hash=?,metadata=?,inbox=?,revision=revision+1,updated=? WHERE id=?", source["title"], body, snapshot, hex.EncodeToString(sum[:]), jsonText(metadata), inbox, sync["last_checked"], id); e != nil {
+			return e
+		}
+		if e := l.recordDocumentCheck(item, source, changed); e != nil {
 			return e
 		}
 		if e := l.exec("UPDATE search SET title=?,summary=?,source_text=? WHERE item_id=?", source["title"], body, text, id); e != nil {

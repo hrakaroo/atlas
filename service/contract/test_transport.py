@@ -90,12 +90,14 @@ class TransportTests(EndpointCase):
         advertised = self.service.rpc("tools/list")["result"]["tools"]
         inventory = json.loads((ROOT / "service" / "contract" / "inventory.json").read_text())
         expected = {entry["name"]: entry for entry in inventory["mcp_tools"]}
-        # Frozen from reviewed Python endpoint output, not regenerated during test runs.
+        # Reviewed schema contract; adaptive due selection and update ordering extend the enums.
         schemas = {tool["name"]: tool["inputSchema"] for tool in advertised}
+        self.assertIn('due',schemas['list_google_documents']['properties']['mode']['enum'])
+        self.assertIn('updates',schemas['search_items']['properties']['sort_by']['enum'])
         digest = hashlib.sha256(json.dumps(schemas, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
-        self.assertEqual(digest, "dcf58ad061c7455093884df2c2b32dcbaa77a0159420ff220879e5157a338b53")
+        self.assertEqual(digest, "5b81a55798d9aeaecefa84655a3f63562ba11aa91464922bc76b7cd148a06f62")
         self.assertEqual([tool["name"] for tool in advertised], [entry["name"] for entry in inventory["mcp_tools"]])
-        self.assertEqual(len(advertised), 41)
+        self.assertEqual(len(advertised), 45)
         self.assertEqual({x["name"] for x in advertised}, set(expected))
         for tool in advertised:
             schema = tool["inputSchema"]

@@ -1,6 +1,6 @@
 # Atlas architecture
 
-Atlas uses one Go shared service for storage and application behavior. See [operations](operations.md) for setup, upgrades and recovery, and [scheduled tasks](../schedules/README.md) for source collection.
+The [application specification](specification.md) defines the current product behavior. Atlas uses one Go shared service for storage and application behavior. See [operations](operations.md) for setup, upgrades and recovery, and [scheduled tasks](../schedules/README.md) for source collection.
 
 ## One database owner, several clients
 
@@ -13,7 +13,7 @@ flowchart LR
     Jobs["Scheduled workflow"] --> Collectors["Collectors / atlas_tool helper"]
     Collectors -->|"authenticated HTTP /mcp"| Service
     Jobs -->|"read-only source access"| Google["Connected Google tools"]
-    Jobs -->|"briefing source reads"| Sources["Web and configured Slack channels"]
+    Jobs -->|"read-only source access"| Sources["Confluence, Slack and web sources"]
     Service --> Library["Library API"]
     Library --> Storage["SQLite and saved local files"]
 ```
@@ -48,7 +48,7 @@ Closing Atlas ends its UI process. Closing ChatGPT ends its scheduler/client ava
 
 ## Source intake and AI work
 
-Atlas does not independently authenticate to Google or run a model. The scheduled workflow supplies those capabilities.
+Atlas does not independently authenticate to external source systems or run a model. Connected desktop workflows supply read-only source access and summarization. Google Docs and Zoom use central intake; article and incident collectors use the feed interfaces described below.
 
 Chrome and Zoom collectors submit eligible source identities/text through the shared service. Library checks canonical Google IDs, transcript hashes/legacy matches, queued work and tombstones. Only selected new sources proceed to Google content reads and AI summaries. The workflow sends complete originals and summaries to `complete_intake`; Library rechecks identity/deletion before committing.
 
@@ -76,7 +76,7 @@ People’s right panel presents a deduplicated Owned / Authored list, then expli
 
 Clicking a document in a person/project/team collection, or a meeting in a person’s list, previews it in the center while the collection remains on the right and the originating profile stays selected in the left list. Navigation history includes that collection identity/material and scroll positions. Open in Documents or Open in Meetings deliberately switches to the corresponding full view; a profile link returns to the collection overview. Background updates refresh the retained collection rather than replacing it with document tags.
 
-The right-hand panel stays mounted; unchanged markup is skipped and changed nodes are reconciled by identity. Scroll/focus survive same-context updates. Search uses lightweight database rows. Activity tracks successful changes broadly; What’s changed tracks only source-content changes detected while a document is starred.
+The right-hand panel stays mounted; unchanged markup is skipped and changed nodes are reconciled by identity. Scroll/focus survive same-context updates. Search uses lightweight database rows. Activity tracks successful changes broadly; Documents incorporates source-content update ordering and per-document seen cursors for all documents. Starred filters the list without changing monitoring cadence.
 
 ## Implementation map
 
@@ -108,3 +108,13 @@ The active native supervisor accepts only `--go-service /absolute/path/to/atlas-
 `build-go.sh` assembles a separate preview with identifier `local.atlas.go-preview` and helper `local.atlas.go-preview.service`. It signs the embedded binary, helper and outer app with the configured reusable certificate, then verifies the bundle. It does not register the bundles or install a launch agent. Its `AtlasRequireService` property makes the native window fail closed when its service is missing; the native window always requires a configured shared service.
 
 The native window library precedence is command-line `--library`, `ATLAS_LIBRARY`, then the current user's Documents/Atlas/library. Window configuration and packaging do not change connector registrations or scheduled tasks.
+
+## Adaptive document monitoring
+
+`document_monitor_state` holds the confirmed activity anchor and last successful content/metadata check. The local `list_google_documents(mode="due")` selector computes daily / every-other-day / weekly / 30-day / manual-only tiers at 3 / 14 / 60 / 180 days. Existing sources bootstrap from observed source timestamps, not repeated checks. Refresh requested bypasses every tier. Metadata-only/unchanged refreshes preserve the anchor; confirmed content changes reset it. Updates and monitor state commit with the refresh transaction. No external Google calls occur in Library. The hourly connector workflow processes due sources; the old morning Drive search is paused. Owner repair honors manual-only archival while keeping its own retry backoff for active documents.
+
+## Feed attention
+Feed entries retain independent items and dates. `feed_events` records first arrivals and meaningful in-place source changes; `feed_seen` stores a monotonic event cursor per feed. The legacy `feed_arrivals` table remains compatible, with a one-time migration preserving earlier event IDs and seen cursors. New events commit with their item mutation. `list_blog_feeds` and `get_blog_feed` expose `latest_entry_id` (an event cursor) and `unseen_entries` (distinct changed entries after the seen cursor), but never acknowledge them. The UI calls `mark_feed_seen(feed_id, through_id)` (`POST /api/feed-seen`) only after user navigation renders the entry or overview. A cursor must belong to that feed; a stale acknowledgement preserves newer changes. Trashed entries are excluded from attention counts. These cursors are separate from document update review and do not affect ordering. Background display updates never acknowledge them.
+
+## Reusable feed workflows
+Feed settings declare append/in_place update flow independently from entries/overview presentation and scheduler cadence. Legacy blog imports remain append producers. The generic configure_feed, upsert_feed_entry and record_feed_check operations let collectors submit structured source data; Library owns identity, tombstones, optimistic revisions, source/summary preservation, Activity and attention. feed_events extends arrival attention to meaningful in-place updates, with a one-time cursor-preserving migration from feed_arrivals. The overview UI derives sections and a stable keyed status/severity index from the same records. Source observation/coverage bookkeeping is separate from meaningful change detection. See [feed workflows](feed-workflows.md).

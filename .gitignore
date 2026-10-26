@@ -83,3 +83,7 @@ config.toml.atlas-tmp
 
 # Private daily briefing instructions and internal source channels
 /schedules/daily-ai-briefing.md
+
+# Private feed configuration (including local export variants)
+/schedules/atlas-alexis-blog-check*
+/schedules/atlas-rp-incidents*

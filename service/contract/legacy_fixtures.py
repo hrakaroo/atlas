@@ -106,3 +106,35 @@ class LegacyService(Service):
             prepare(self.library, **self.fixture_options)
             self.prepared = True
         super().start()
+
+
+class FeedCursorLegacyService(Service):
+    """Fixture-only SQL: old feed arrival cursors, deliberately noncontiguous."""
+    def start(self):
+        if not hasattr(self,'feed_fixture_ready'):
+            root=self.library.resolve()
+            if (root.parent/'.atlas-contract-fixture').read_text()!='atlas-contract-v1' or any(root.iterdir()):
+                raise ValueError('An empty marked fixture root is required')
+            db=sqlite3.connect(str(root/'library.sqlite'))
+            try:
+                db.executescript(ITEM_SCHEMA+"""
+                    CREATE TABLE blog_feeds(id TEXT PRIMARY KEY,name TEXT NOT NULL,normalized_name TEXT NOT NULL UNIQUE);
+                    CREATE TABLE blog_members(item_id TEXT PRIMARY KEY REFERENCES items(id),feed_id TEXT NOT NULL REFERENCES blog_feeds(id));
+                    CREATE TABLE feed_arrivals(id INTEGER PRIMARY KEY AUTOINCREMENT,item_id TEXT NOT NULL UNIQUE REFERENCES items(id),feed_id TEXT NOT NULL REFERENCES blog_feeds(id));
+                    CREATE TABLE feed_seen(feed_id TEXT PRIMARY KEY REFERENCES blog_feeds(id),through_id INTEGER NOT NULL);
+                """)
+                db.execute("INSERT INTO blog_feeds VALUES('legacy-feed','Legacy feed','legacy feed')")
+                for index,arrival in enumerate((10,30)):
+                    ident='feed-original-'+str(index);source='Saved legacy source '+str(index)
+                    folder=root/'items'/ident;original=folder/'originals'/'source.txt';original.parent.mkdir(parents=True)
+                    original.write_text(source);(folder/'summary.md').write_text('Saved summary '+str(index))
+                    db.execute('INSERT INTO items(id,title,kind,date,summary,source_key,source_path,source_hash,metadata,created,updated) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                        (ident,'Edition '+str(index),'blog','2026-01-01','Saved summary '+str(index),'legacy-feed:'+str(index),str(original),hashlib.sha256(source.encode()).hexdigest(),'{"date_basis":"source"}',CREATED,CREATED))
+                    db.execute('INSERT INTO search VALUES(?,?,?,?)',(ident,'Edition '+str(index),'Saved summary '+str(index),source))
+                    db.execute('INSERT INTO blog_members VALUES(?,?)',(ident,'legacy-feed'))
+                    db.execute('INSERT INTO feed_arrivals VALUES(?,?,?)',(arrival,ident,'legacy-feed'))
+                db.execute("INSERT INTO feed_seen VALUES('legacy-feed',10)")
+                db.commit()
+            finally:db.close()
+            self.feed_fixture_ready=True
+        super().start()

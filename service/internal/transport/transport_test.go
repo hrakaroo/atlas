@@ -198,7 +198,7 @@ func TestRPCIDsNotificationAndFrozenCatalog(t *testing.T) {
 	}
 	w := jsonRequest(t, h, "/mcp", map[string]any{"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
 	tools := object(t, w)["result"].(map[string]any)["tools"].([]any)
-	if len(tools) != 41 {
+	if len(tools) != 45 {
 		t.Fatal(len(tools))
 	}
 	schemas := map[string]any{}
@@ -209,7 +209,7 @@ func TestRPCIDsNotificationAndFrozenCatalog(t *testing.T) {
 	// Go's encoder orders object keys, matching the Python schema-only canonical digest.
 	canonical, _ := json.Marshal(schemas)
 	digest := sha256.Sum256(canonical)
-	if hex.EncodeToString(digest[:]) != "dcf58ad061c7455093884df2c2b32dcbaa77a0159420ff220879e5157a338b53" {
+	if hex.EncodeToString(digest[:]) != "5b81a55798d9aeaecefa84655a3f63562ba11aa91464922bc76b7cd148a06f62" {
 		t.Fatalf("catalog schema changed:%x", digest)
 	}
 	for _, params := range []string{"null", "[]", "true"} {
@@ -316,7 +316,7 @@ func TestEveryPOSTRouteAndExplicitImport(t *testing.T) {
 		arguments = args
 		return map[string]any{}, nil
 	}))
-	routes := map[string]string{"/api/tag": "tag", "/api/delete": "delete_item", "/api/restore": "restore_item", "/api/series": "assign_meeting_series", "/api/entity": "create_entity", "/api/link-entity": "link_entity", "/api/apply": "apply_tag", "/api/undo": "undo", "/api/backup": "backup", "/api/import": "import_item", "/api/summary": "update_summary", "/api/changes-seen": "mark_document_changes_seen", "/api/date": "set_date", "/api/authors": "set_authors", "/api/starred": "set_starred", "/api/refresh-request": "set_refresh_requested", "/api/reviewed": "set_reviewed"}
+	routes := map[string]string{"/api/tag": "tag", "/api/delete": "delete_item", "/api/restore": "restore_item", "/api/series": "assign_meeting_series", "/api/entity": "create_entity", "/api/link-entity": "link_entity", "/api/apply": "apply_tag", "/api/undo": "undo", "/api/backup": "backup", "/api/import": "import_item", "/api/summary": "update_summary", "/api/feed-config": "configure_feed", "/api/feed-entry": "upsert_feed_entry", "/api/feed-check": "record_feed_check", "/api/feed-seen": "mark_feed_seen", "/api/changes-seen": "mark_document_changes_seen", "/api/date": "set_date", "/api/authors": "set_authors", "/api/starred": "set_starred", "/api/refresh-request": "set_refresh_requested", "/api/reviewed": "set_reviewed"}
 	for path, expected := range routes {
 		called = ""
 		w := jsonRequest(t, h, path, map[string]any{"name": "Topic", "explicit": false, "extra": "ignored only where Python ignores it"})

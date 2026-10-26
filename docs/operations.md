@@ -1,6 +1,6 @@
 # Atlas operations
 
-Commands below run from the Atlas project directory. They describe setup and maintenance; reading this guide does not execute them. See [architecture](architecture.md) and [scheduled tasks](../schedules/README.md).
+Commands below run from the Atlas project directory. They describe setup and maintenance; reading this guide does not execute them. See the [application specification](specification.md), [architecture](architecture.md) and [scheduled tasks](../schedules/README.md).
 
 ## Installed Go deployment
 
@@ -61,6 +61,9 @@ A helper invocation connects to the running backend; it does not reload backend 
 | Chrome tab has not imported | Saved sessions can lag. Check collector output and Atlas pending intake; untitled drafts and tombstoned IDs are excluded. Up to five new items are processed per run. |
 | Document owner is still missing | Inspect wildcard metadata permissions; incomplete permissions and shared-drive ownership can prevent an individual owner link. Keep uncertainty; do not infer an author or owner. |
 | Refresh request remains checked | Failed/incomplete reads stay queued. Inspect the scheduled run’s reason; do not clear the flag to acknowledge an unsuccessful refresh. |
+| New material is not visible | The window polls local changes every 15 seconds and on focus. Check the current search/filters; editing or an open dialog pauses display refresh. This polling does not fetch external sources. |
+| Feed has no new dot | Check the saved entry and source evidence. Only arrivals and meaningful in-place source changes create attention; quiet checks, manual edits and repeated data do not. Opening the feed acknowledges its displayed cursor. |
+| Incident state looks old | Compare Last checked with the recorded status time. Inspect the incident task for incomplete reads or source-access failure; it retains the previous checkpoint and state for retry. Do not infer resolution or mark the feed read to acknowledge a failed check. |
 | Generic icon remains in the Dock | Quit Atlas, remove the old shortcut and drag the rebuilt app into the Dock while closed. |
 
 If the service is unavailable, clients fail closed. Repair service availability; do not bypass it with direct database access.
@@ -86,6 +89,12 @@ Use Atlas’s backup action for a consistent copy of SQLite plus item files. Do 
 For an existing library, the validated backup restore/handoff reopens at the same original absolute root: saved source paths are absolute. Relocating existing data to another root or username requires a separately reviewed path-rebase procedure and has not been accepted or implemented here. A fresh library for another account, explicit root, owner and timezone is supported and tested. On another Mac, keep the consistent private backup separate from source code and plan that relocation before opening it. Do not reuse the previous Mac’s `.service` connection/activation/lock/log files, launch agent or MCP credentials. Preserve library data, queues and tombstones; run fresh service installation/configuration for that Mac. Set the native `--library`/`ATLAS_LIBRARY` and registered paths consistently first. Do not start the restored app against stale runtime settings.
 
 Recreate scheduled jobs using [the schedule setup instructions](../schedules/README.md), new destination chat IDs and current account connections. Copying the manifest or prompts does not register jobs.
+
+## Feed configuration and checks
+
+Feed flow, presentation and cadence are separate. Configure a feed through `configure_feed`: append/entries for briefings and articles, in_place/overview for ongoing incidents. The window displays configured feeds; it does not register their collectors. A populated feed cannot change flow accidentally. Keep private source channels, creator identities and routing in local schedule configuration, outside public source control.
+
+In-place submissions use stable entry keys, current expected revisions and complete source evidence. The service preserves identity, organization and earlier snapshots, records meaningful changes and respects removed items. A completed collector check advances Last checked through `record_feed_check`; failed/partial reads must not advance it. Neither collectors nor diagnostic API reads should call `mark_feed_seen`, which is reserved for acknowledging a user-visible snapshot. See the [feed contract](feed-workflows.md) for arguments, quiet-update semantics and overview retention.
 
 ## Checks
 

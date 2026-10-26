@@ -23,7 +23,7 @@ func contractFault(root string) (func(string) error, error) {
 		return nil, err
 	}
 	switch cfg.Point {
-	case "summary.before_write", "summary.before_commit", "obsidian.snapshot_verified", "refresh.before_commit", "refresh.after_commit", "delete.before_commit", "delete.after_commit", "restore.before_commit", "restore.after_commit":
+	case "summary.before_write", "summary.before_commit", "obsidian.snapshot_verified", "refresh.before_commit", "refresh.after_commit", "feed.before_commit", "feed.after_commit", "delete.before_commit", "delete.after_commit", "restore.before_commit", "restore.after_commit":
 	default:
 		return nil, errors.New("unknown contract fault point")
 	}

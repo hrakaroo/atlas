@@ -382,7 +382,7 @@ func (h *handler) post(w http.ResponseWriter, r *http.Request, path string) {
 		h.reply(w, r, 400, map[string]any{"error": "Expected an argument object."})
 		return
 	}
-	routes := map[string]string{"/api/tag": "tag", "/api/delete": "delete_item", "/api/restore": "restore_item", "/api/series": "assign_meeting_series", "/api/entity": "create_entity", "/api/link-entity": "link_entity", "/api/apply": "apply_tag", "/api/undo": "undo", "/api/backup": "backup", "/api/import": "import_item", "/api/summary": "update_summary", "/api/changes-seen": "mark_document_changes_seen", "/api/date": "set_date", "/api/authors": "set_authors", "/api/starred": "set_starred", "/api/refresh-request": "set_refresh_requested", "/api/reviewed": "set_reviewed"}
+	routes := map[string]string{"/api/tag": "tag", "/api/delete": "delete_item", "/api/restore": "restore_item", "/api/series": "assign_meeting_series", "/api/entity": "create_entity", "/api/link-entity": "link_entity", "/api/apply": "apply_tag", "/api/undo": "undo", "/api/backup": "backup", "/api/import": "import_item", "/api/summary": "update_summary", "/api/feed-config": "configure_feed", "/api/feed-entry": "upsert_feed_entry", "/api/feed-check": "record_feed_check", "/api/feed-seen": "mark_feed_seen", "/api/changes-seen": "mark_document_changes_seen", "/api/date": "set_date", "/api/authors": "set_authors", "/api/starred": "set_starred", "/api/refresh-request": "set_refresh_requested", "/api/reviewed": "set_reviewed"}
 	name, ok := routes[path]
 	if !ok {
 		h.reply(w, r, 404, map[string]any{"error": "Not found"})

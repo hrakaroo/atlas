@@ -2,6 +2,7 @@
 
 The Go service owns the library and serves authenticated loopback HTTP/MCP and the embedded web interface. Python helpers connect through HTTP; they do not open the database. Native packaging lives in the repository root.
 
+- [Application specification](../docs/specification.md): current product behavior.
 - [Validation status](STATUS.md): checks and platform scope.
 - [Endpoint contracts](contract/README.md): repeatable isolated validation.
 - [Transport inventory](contract/inventory.json): tools and routes used by contract checks.

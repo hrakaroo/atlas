@@ -256,6 +256,67 @@
       "source_line": 39
     },
     {
+      "name": "configure_feed",
+      "properties": [
+        "name",
+        "flow",
+        "presentation",
+        "entry_label"
+      ],
+      "required": [
+        "name",
+        "flow",
+        "presentation"
+      ]
+    },
+    {
+      "name": "upsert_feed_entry",
+      "properties": [
+        "feed_id",
+        "entry_key",
+        "title",
+        "summary",
+        "original_text",
+        "original_name",
+        "source_url",
+        "observed_at",
+        "date",
+        "fields",
+        "expected_revision",
+        "source_context"
+      ],
+      "required": [
+        "feed_id",
+        "entry_key",
+        "title",
+        "summary",
+        "original_text",
+        "source_url",
+        "observed_at",
+        "expected_revision"
+      ]
+    },
+    {
+      "name": "record_feed_check",
+      "properties": [
+        "feed_id"
+      ],
+      "required": [
+        "feed_id"
+      ]
+    },
+    {
+      "name": "mark_feed_seen",
+      "properties": [
+        "feed_id",
+        "through_id"
+      ],
+      "required": [
+        "feed_id",
+        "through_id"
+      ]
+    },
+    {
       "name": "set_reviewed",
       "properties": [
         "item_id",
@@ -656,6 +717,18 @@
     {
       "method": "GET",
       "path_or_prefix": "/"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/feed-config"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/feed-entry"
+    },
+    {
+      "method": "POST",
+      "path_or_prefix": "/api/feed-check"
     }
   ],
   "additional_compatibility_dispatch": [

@@ -78,8 +78,7 @@
 .reader-more-panel button{display:block;width:100%;text-align:left;white-space:nowrap;border:0}
 
 .changes-hint{margin:0;padding:0 30px 14px;color:var(--muted);font-size:12px;line-height:1.6}
-.document-change-status{font-size:11px;color:var(--muted);margin:8px 0}
-.document-change-status.unseen{color:var(--accent);font-weight:600}
+.document-unread-dot{display:inline-block;width:7px;height:7px;margin-right:8px;border-radius:50%;background:var(--accent);vertical-align:middle}
 
 .reader-more-panel .danger:not(:first-child){margin-top:4px;border-top:1px solid var(--line);border-radius:0 0 5px 5px}
 
@@ -92,3 +91,6 @@
 .document-browse-context button{font-size:11px;padding:5px 8px;max-width:75%;overflow-wrap:anywhere;text-align:left}
 
 .search input{min-width:0;flex:1}.search #search-clear{flex:none;border:0;background:transparent;border-radius:50%;width:26px;height:26px;padding:0;font-size:21px;line-height:1;color:var(--muted)}.search #search-clear:hover{background:#dce8e6;color:var(--ink)}
+
+/* Overview feeds keep their incident index mounted like other context rails. */
+.feed-index-entry{display:block;width:100%;text-align:left;background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:13px 5px;line-height:1.6}.feed-index-entry strong,.feed-index-entry>span,.feed-index-entry small{display:block}.feed-index-entry small{font-size:10px;color:var(--muted);font-weight:400}.feed-index-entry>span{font-size:11px}.feed-status{white-space:nowrap}.feed-status-square{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;background:#87969a}.feed-status-active .feed-status-square{background:#c55348}.feed-status-stable .feed-status-square{background:#c59b28}.feed-status-resolved .feed-status-square{background:#43846b}.feed-entry-meta{font-size:11px;color:var(--muted);line-height:1.8}.feed-overview-entry{padding:24px 0;border-top:1px solid var(--line);scroll-margin-top:20px;outline-offset:5px}.feed-overview-entry h2{font:22px/1.4 Georgia;margin:0 0 9px}.feed-overview-entry .content h2{font:17px Georgia;margin:18px 0 8px}.feed-entry-links{display:flex;align-items:center;gap:14px;margin-top:14px;font-size:11px}.feed-entry-links a{color:var(--accent)}.feed-entry-links button{font-size:10px;padding:4px 7px}.feed-index-archive,#feed-overview-archive{margin-top:22px;font-size:12px}.feed-index-archive summary,#feed-overview-archive>summary{cursor:pointer;color:var(--muted)}

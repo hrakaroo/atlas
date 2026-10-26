@@ -76,8 +76,8 @@ func (l *Library) Listing(arguments map[string]any) ([]Record, error) {
 		return nil, errors.New("Search titles or full text.")
 	}
 	sortBy := strDefault(arguments, "sort_by", "date")
-	if sortBy != "date" && sortBy != "title" {
-		return nil, errors.New("Sort by date or title.")
+	if sortBy != "date" && sortBy != "title" && sortBy != "updates" {
+		return nil, errors.New("Sort by date, title, or updates.")
 	}
 	collection := ""
 	if value, present := arguments["collection"]; present && value != nil {
@@ -248,15 +248,23 @@ func (l *Library) Listing(arguments map[string]any) ([]Record, error) {
 		result = append(result, item)
 	}
 	sort.SliceStable(result, func(i, j int) bool { return caseFold(str(result[i], "title")) < caseFold(str(result[j], "title")) })
-	if sortBy == "date" {
+	if sortBy == "date" || sortBy == "updates" {
 		sort.SliceStable(result, func(i, j int) bool { return listingDate(result[i]) > listingDate(result[j]) })
 	}
 	starsFirst := true
 	if value, present := arguments["stars_first"]; present {
 		starsFirst = truth(value)
 	}
-	if starsFirst {
+	if starsFirst && sortBy != "updates" {
 		sort.SliceStable(result, func(i, j int) bool { return truth(result[i]["starred"]) && !truth(result[j]["starred"]) })
+	}
+	if sortBy == "updates" {
+		if err = l.annotateDocumentChanges(result); err != nil {
+			return nil, err
+		}
+		sort.SliceStable(result, func(i, j int) bool {
+			return number(result[i]["latest_change_id"]) > number(result[j]["latest_change_id"])
+		})
 	}
 	if len(terms) > 0 {
 		sort.SliceStable(result, func(i, j int) bool {

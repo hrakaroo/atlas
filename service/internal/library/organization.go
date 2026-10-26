@@ -2,6 +2,7 @@ package library
 
 import (
 	"errors"
+	"sort"
 	"strings"
 )
 
@@ -281,7 +282,30 @@ func (l *Library) ensureSeries(title, cadence string) (string, error) {
 	return id, l.exec("INSERT INTO meeting_series VALUES(?,?,?,?)", id, title, cadence, normalized)
 }
 func (l *Library) BlogFeeds() ([]Record, error) {
-	return l.rows("SELECT f.*,count(i.id) AS edition_count,max(i.date) AS latest_date FROM blog_feeds f LEFT JOIN blog_members m ON m.feed_id=f.id LEFT JOIN items i ON i.id=m.item_id AND i.deleted_at IS NULL GROUP BY f.id ORDER BY f.name")
+	if err := l.syncFeedArrivals(); err != nil {
+		return nil, err
+	}
+	feeds, err := l.rows("SELECT f.*,count(i.id) AS edition_count,max(i.date) AS latest_date FROM blog_feeds f LEFT JOIN blog_members m ON m.feed_id=f.id LEFT JOIN items i ON i.id=m.item_id AND i.deleted_at IS NULL GROUP BY f.id ORDER BY f.name")
+	if err != nil {
+		return nil, err
+	}
+	for _, feed := range feeds {
+		options, e := l.feedOptions(str(feed, "id"))
+		if e != nil {
+			return nil, e
+		}
+		for k, v := range options {
+			feed[k] = v
+		}
+		a, e := l.feedAttention(str(feed, "id"))
+		if e != nil {
+			return nil, e
+		}
+		for k, v := range a {
+			feed[k] = v
+		}
+	}
+	return feeds, nil
 }
 func (l *Library) GetBlogFeed(id string) (Record, error) {
 	result, err := l.row("SELECT * FROM blog_feeds WHERE id=?", id)
@@ -294,6 +318,46 @@ func (l *Library) GetBlogFeed(id string) (Record, error) {
 	editions, err := l.Listing(Record{"kind": "blog", "blog_feed_id": id, "stars_first": false})
 	if err != nil {
 		return nil, err
+	}
+	if err = l.syncFeedArrivals(); err != nil {
+		return nil, err
+	}
+	attention, e := l.feedAttention(id)
+	if e != nil {
+		return nil, e
+	}
+	for k, v := range attention {
+		result[k] = v
+	}
+	// Multiple articles may be published on one day. Prefer source publication
+	// time when supplied; otherwise retain deterministic arrival order.
+	sort.SliceStable(editions, func(i, j int) bool {
+		a, b := editions[i], editions[j]
+		if str(a, "date") != str(b, "date") {
+			return str(a, "date") > str(b, "date")
+		}
+		stamp := func(item Record) string {
+			if value := str(mapping(mapping(item["metadata"])["feed_source"]), "created_at"); value != "" {
+				return value
+			}
+			return str(item, "created")
+		}
+		if stamp(a) != stamp(b) {
+			return stamp(a) > stamp(b)
+		}
+		return str(a, "id") > str(b, "id")
+	})
+	options, e := l.feedOptions(id)
+	if e != nil {
+		return nil, e
+	}
+	for k, v := range options {
+		result[k] = v
+	}
+	if options["presentation"] == "overview" {
+		if err = l.feedOverview(result, editions); err != nil {
+			return nil, err
+		}
 	}
 	result["editions"] = editions
 	result["latest"] = nil

@@ -43,6 +43,7 @@ The suite checks:
 - Title/full-text search, ranking, phrases, prefixes, accents and non-Latin text.
 - Ownership, structured document mentions, meeting participants, series, feeds, refresh queues and retry behavior.
 - Restart persistence, concurrent writes, saved history, backup restoration and bounded recovery behavior.
+- Adaptive document monitoring and unread document updates, feed arrivals and meaningful in-place changes, overview retention, quiet checks and cursor-preserving upgrades.
 
 `inventory.json` specifies the advertised tools and route branches. Schema checks use a frozen fingerprint; do not regenerate expectations merely to make a failure pass. The `exact` comparator is strict about types, keys, absent versus null, list order and bytes. Self-tests alter revisions, source bytes and event counts to verify rejection.
 

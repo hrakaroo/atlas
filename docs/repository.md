@@ -4,7 +4,7 @@
 
 ## Source and private local files
 
-`.gitignore` excludes library data, SQLite databases and sidecars, source imports/backups, credentials and signing keys, generated app/build output, `.work/`, caches and local archives. It also excludes the machine-specific schedule manifest and private daily briefing prompt. Ignore rules do not remove files already committed or erase earlier Git history.
+`.gitignore` excludes library data, SQLite databases and sidecars, source imports/backups, credentials and signing keys, generated app/build output, `.work/`, caches and local archives. It also excludes the machine-specific schedule manifest and private briefing, author-blog and incident prompts. Ignore rules do not remove files already committed or erase earlier Git history.
 
 Before publishing, inspect the staged diff and file list. Keep tokens, source snapshots, browser sessions and internal channel/account configuration out of Git. Use generic public instructions and keep personal schedule exports local. Set the intended repository-local Git author identity; authentication keys and commit authorship are separate.
 

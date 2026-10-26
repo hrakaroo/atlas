@@ -1,15 +1,39 @@
 # Service validation status
 
-Go is the active backend. Runtime validation and signed app builds have been exercised on macOS arm64; Intel macOS has compile-only validation.
+The Go service is the active backend. The [application specification](../docs/specification.md) describes current behavior; this document records validation evidence and its limits. Historical results do not certify later code changes.
 
-The owned-storage update passed all 108 isolated endpoint tests, 16 client/packaging tests and nine JavaScript checks. Go unit tests, race checks and vet passed during repository layout verification. Fresh-checkout build and endpoint validation also passed. Signed app and native supervisor checks also passed. Re-run applicable checks after changes; historical results do not certify a later build.
+## Latest feed-workflow release
 
-See [endpoint validation](contract/README.md), [repository setup](../docs/repository.md) and [operations](../docs/operations.md). Generated reports and candidates stay in ignored `.work/`.
+The signed candidate deployed on October 25, 2026 passed:
 
-Current endpoint tests and the transport inventory live in `contract/`. Keep generated validation reports and machine-specific deployment records private and outside source control.
+- All 127 isolated HTTP/MCP endpoint contracts against the packaged executable.
+- Transport coverage of all 45 advertised tools and all inventoried routes, with no missing operations. Coverage establishes exercised transport paths; scenario assertions establish the tested behavior.
+- 16 client tests, 11 JavaScript checks and three packaged-binary checks.
+- Go unit/transport tests and race checks for the store and transport packages.
+- A native WKWebView interaction check using synthetic data: overview rendering, status/severity index navigation and focus, stable right-panel nodes during updates, and background changes remaining unread.
 
-Structured document mentions are enforced by Go: only observed people-chip identities or single-address mailto links can create mentioned-person links. Six endpoint regressions cover invalid prose/evidence, email identity reuse, conflicting names, missing chip names, Trash and intake retry. The signed packaged service also passed all 98 contracts and the native helper check. The deployment preserved the endpoint inventory, existing relationships and connection settings; private backup/deployment evidence remains ignored under `.work/`.
+Deployment used a complete API backup and a before/after endpoint comparison. Existing item content and organization, queues, Activity and feed read cursors were preserved. The running service was verified as the selected native supervisor's child, and served assets matched the canonical web files. Initial incident entries were read back and their full source bytes/hashes and structured fields verified. An unchanged resubmission produced no duplicate item, Activity event or unread change.
 
-Retired-backend removal: default validation targets Go only. The 98 endpoint tests, 16 client/packaging tests, nine JavaScript checks and Go tests/vet pass without an archived implementation. Additional Go-only checks pass for rich-state restarts and alternate-user configuration (4 tests), interrupted-write/source recovery (10 tests), Trash recovery (4 tests) and process ownership/reopen behavior. Frozen source/schema fixtures remain independent checked-in references; validation does not regenerate them.
+Generated reports, synthetic native checks, candidates and machine-specific backup/deployment evidence remain private under ignored `service/.work/`. The current suite is discovered from `contract/test_*.py`; the recorded count is evidence for this release, not a fixed future requirement.
 
-Owned storage: People, Teams and Projects keep descriptions, revisions and historical original bytes in SQLite. Ten new endpoint checks cover source ownership, exact legacy description bytes, shared-source relocation, attachments, Trash, backups, independent Zoom transcripts, Confluence identity and interrupted-migration recovery. Validation uses disposable roots; fixture SQL only prepares unopened historical databases, while all state/content assertions use public endpoints. The full library migration is rehearsed against a private API backup before deployment.
+## Behavioral coverage
+
+| Area | Accepted regression scope |
+| --- | --- |
+| Transport and ownership | HTTP/MCP authentication, origin/host boundaries, schemas, errors, single service ownership and guarded test controls. |
+| Intake and preservation | Canonical source identity, duplicate/tombstone handling, complete originals, dates, stars, manual organization, queues and retry behavior. |
+| Relationships | Entities, distinct ownership/authorship/creation/mention/attendance, structured Google people-chip/email evidence, email identity matching, candidate separation and removed-profile protection. |
+| Reading and search | Title/full-text scope, ranking, prefixes, phrases, Unicode, preview navigation and retained context panels. |
+| Document monitoring | All cadence boundaries, source-age bootstrapping, manual archival override, unchanged checks, content-change wake-up, failure retention, all-document updates and seen cursors. |
+| Feed workflows | Append/in-place identity, revisions and older-observation rejection, concurrent writers, full source/history retention, quiet checks and rephrasing, overview summaries/retention, meaningful events and legacy cursor preservation. |
+| Recovery and storage | Restart persistence, database-backed entity descriptions/history, independent source copies and legacy attachments, interrupted source/summary writes, Trash, same-root backup restoration and process recovery. |
+
+Additional configuration, failure-recovery, native-helper and fresh-checkout checks are described in the [endpoint guide](contract/README.md). Synthetic historical schema setup prepares disposable fixtures only; application state and source preservation are asserted through public endpoints.
+
+## Limits and repeatable checks
+
+Runtime validation and signed native builds have been exercised on macOS arm64. Intel macOS has compile-only validation. Native tests and signing verification do not establish notarization, distribution readiness or every managed-device permission policy.
+
+Fault tests cover named interruption boundaries, not every possible physical power-loss outcome. Backup restore validation uses the original absolute root; cross-root relocation remains a separate reviewed procedure. Connector access and unattended scheduler availability depend on the local runtime and source accounts; synthetic contracts do not guarantee those external systems.
+
+Run applicable checks after implementation changes using the [endpoint guide](contract/README.md) and [repository guide](../docs/repository.md). Test signed packaged assets before deployment and follow [deployment safeguards](DEPLOYMENT.md). Documentation-only updates do not require rebuilding or restarting the service.

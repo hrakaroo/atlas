@@ -215,6 +215,18 @@ func (l *Library) Dispatch(name string, args map[string]any) (any, error) {
 			return nil, errors.New("Authors must be a list of names.")
 		}
 		return l.SetAuthors(str(args, "item_id"), authors)
+	case "configure_feed":
+		return l.ConfigureFeed(args)
+	case "upsert_feed_entry":
+		return l.UpsertFeedEntry(args)
+	case "record_feed_check":
+		return l.RecordFeedCheck(str(args, "feed_id"))
+	case "mark_feed_seen":
+		through, err := integer(args["through_id"])
+		if err != nil {
+			return nil, err
+		}
+		return l.MarkFeedSeen(str(args, "feed_id"), through)
 	case "list_blog_feeds":
 		return l.BlogFeeds()
 	case "get_blog_feed":
@@ -400,7 +412,7 @@ var allowedArguments = map[string]string{
 	"get_source": "item_id", "get_attachment": "item_id target", "get_history": "item_id", "get_history_content": "item_id entry_id",
 	"list_activity": "limit before_id", "changes": "", "changed_documents": "query search_scope tag_ids", "mark_document_changes_seen": "item_id through_id",
 	"list_entities": "", "get_entity": "entity_id", "create_entity": "name kind", "get_team": "item_id", "set_authors": "item_id authors",
-	"list_blog_feeds": "", "get_blog_feed": "feed_id", "assign_meeting_series": "item_id title cadence", "list_meeting_series": "", "get_meeting_series": "series_id",
+	"configure_feed": "name flow presentation entry_label", "upsert_feed_entry": "feed_id entry_key title summary original_text original_name source_url observed_at date fields source_context expected_revision", "record_feed_check": "feed_id", "mark_feed_seen": "feed_id through_id", "list_blog_feeds": "", "get_blog_feed": "feed_id", "assign_meeting_series": "item_id title cadence", "list_meeting_series": "", "get_meeting_series": "series_id",
 	"preview_delete_item": "item_id", "delete_item": "item_id expected_revision", "restore_item": "item_id",
 }
 

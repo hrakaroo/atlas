@@ -413,6 +413,13 @@ func (l *Library) ListOwnershipLookups(limit int64) (Record, error) {
 		if e != nil {
 			return nil, e
 		}
+		monitoring, e := l.documentMonitoring(item)
+		if e != nil {
+			return nil, e
+		}
+		if truth(monitoring["manual_only"]) && !truth(mapping(item["metadata"])["refresh_requested"]) {
+			continue
+		}
 		state := mapping(mapping(item["metadata"])["document_people"])
 		if state["ownership_status"] == "no_individual_owner" {
 			continue
